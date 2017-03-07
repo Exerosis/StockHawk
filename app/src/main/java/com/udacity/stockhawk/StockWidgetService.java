@@ -14,7 +14,8 @@ public class StockWidgetService extends RemoteViewsService {
 
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
-        Log.i("WIDGET", "getViews");
+        Log.i("TEST", "onGetViewFactory");
+
         symbols = PrefUtils.getStocks(StockWidgetService.this);
 
         return new RemoteViewsFactory() {
