@@ -2,30 +2,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/background"
-    android:padding="@dimen/widget_margin">
-
-    <LinearLayout
-        android:id="@+id/stock_widget_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_alignParentTop="true"
-        android:background="?attr/toolbarStyle"
-        android:elevation="4dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/app_name" />
-    </LinearLayout>
+    android:layout_margin="@dimen/widget_margin">
 
     <ListView
         android:id="@+id/stock_widget_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_below="@id/stock_widget_toolbar"
-        android:layout_margin="8dp"
-        android:elevation="2dp" />
+        android:elevation="4dp" />
 
 </RelativeLayout>
