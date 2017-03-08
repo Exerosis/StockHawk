@@ -16,7 +16,7 @@ import com.orhanobut.hawk.Hawk;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.addstock.AddStockDialog;
 import com.udacity.stockhawk.implementation.controller.details.container.StockDetailsContainerActivity;
-import com.udacity.stockhawk.implementation.model.PrefUtils;
+import com.udacity.stockhawk.implementation.model.Stock;
 import com.udacity.stockhawk.implementation.model.StockStore;
 import com.udacity.stockhawk.implementation.view.stocklist.StockList;
 import com.udacity.stockhawk.implementation.view.stocklist.StockListView;
@@ -24,16 +24,14 @@ import com.udacity.stockhawk.implementation.view.stocklist.holder.StockHolder;
 import com.udacity.stockhawk.implementation.view.stocklist.holder.StockViewHolder;
 import com.udacity.stockhawk.utilities.NetworkUtilities;
 
-import java.util.concurrent.TimeUnit;
-
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import yahoofinance.Stock;
-
 import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_SYMBOL;
+import static com.udacity.stockhawk.implementation.model.PrefUtils.addStock;
+import static com.udacity.stockhawk.implementation.model.PrefUtils.getDisplayMode;
+import static com.udacity.stockhawk.implementation.model.PrefUtils.getStocks;
+import static com.udacity.stockhawk.implementation.model.PrefUtils.removeStock;
+import static com.udacity.stockhawk.implementation.model.PrefUtils.toggleDisplayMode;
 
 public class StockListFragment extends Fragment implements StockListController {
-    private static final String KEY_DISPLAY_MODE = "absolute";
     private ArraySet<String> symbols;
     private StockList view;
     private AddStockDialog dialog;
@@ -47,9 +45,9 @@ public class StockListFragment extends Fragment implements StockListController {
 
         Hawk.init(getContext()).build();
 
-        Observable.timer(30, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread()).subscribe(tick -> view.getAdapter().notifyDataSetChanged());
+        //  Observable.timer(30, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread()).subscribe(tick -> view.getAdapter().notifyDataSetChanged());
 
-        symbols = PrefUtils.getStocks(getContext());
+        symbols = getStocks(getContext());
 
         setHasOptionsMenu(true);
 
@@ -61,9 +59,8 @@ public class StockListFragment extends Fragment implements StockListController {
 
             @Override
             public void onBindViewHolder(StockViewHolder holder, int position) {
-                StockStore.getStock(getContext(), symbols.valueAt(position)).subscribe(stock -> {
+                StockStore.getStock(symbols.valueAt(position)).subscribe(stock -> {
                     holder.setStock(stock);
-                    holder.setDisplayMode(getDisplayMode());
                     holder.setListener(StockListFragment.this);
                     view.hideStockError();
                     view.hideNetworkError();
@@ -96,7 +93,7 @@ public class StockListFragment extends Fragment implements StockListController {
     public void onSwipe(StockHolder holder, int direction) {
         String symbol = holder.getStock().getSymbol();
         symbols.remove(symbol);
-        PrefUtils.removeStock(getContext(), symbol);
+        removeStock(getContext(), symbol);
         view.getAdapter().notifyItemRemoved(symbols.indexOf(symbol));
     }
 
@@ -104,7 +101,7 @@ public class StockListFragment extends Fragment implements StockListController {
     public void onRefresh() {
         if (!NetworkUtilities.isOnline(getContext()))
             view.showNetworkError();
-        else if (PrefUtils.getStocks(getContext()).size() == 0)
+        else if (getStocks(getContext()).size() == 0)
             view.showStockError();
         else
             view.getAdapter().notifyDataSetChanged();
@@ -120,7 +117,7 @@ public class StockListFragment extends Fragment implements StockListController {
         }
         symbols.add(symbol);
         view.getAdapter().notifyItemInserted(symbols.indexOf(symbol));
-        PrefUtils.addStock(getContext(), symbol);
+        addStock(getContext(), symbol);
         dialog.dismissAllowingStateLoss();
         return true;
     }
@@ -129,7 +126,7 @@ public class StockListFragment extends Fragment implements StockListController {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.main_activity_settings, menu);
         MenuItem item = menu.findItem(R.id.action_change_units);
-        item.setIcon(getDisplayMode() ? R.drawable.ic_percentage : R.drawable.ic_dollar);
+        item.setIcon(getDisplayMode(getContext()) ? R.drawable.ic_percentage : R.drawable.ic_dollar);
     }
 
     @Override
@@ -137,8 +134,8 @@ public class StockListFragment extends Fragment implements StockListController {
         if (item.getItemId() != R.id.action_change_units)
             return super.onOptionsItemSelected(item);
 
-        PrefUtils.toggleDisplayMode(getContext());
-        item.setIcon(getDisplayMode() ? R.drawable.ic_percentage : R.drawable.ic_dollar);
+        toggleDisplayMode(getContext());
+        item.setIcon(getDisplayMode(getContext()) ? R.drawable.ic_percentage : R.drawable.ic_dollar);
         view.getAdapter().notifyDataSetChanged();
         return true;
     }
@@ -146,9 +143,5 @@ public class StockListFragment extends Fragment implements StockListController {
     @Override
     public void onCancel() {
         dialog.dismissAllowingStateLoss();
-    }
-
-    private boolean getDisplayMode() {
-        return PrefUtils.getDisplayMode(getContext()).equals(KEY_DISPLAY_MODE);
     }
 }

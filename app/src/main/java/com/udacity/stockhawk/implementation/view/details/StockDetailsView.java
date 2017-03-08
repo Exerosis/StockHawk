@@ -23,8 +23,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import yahoofinance.histquotes.HistoricalQuote;
 
-import static android.view.View.LAYOUT_DIRECTION_LTR;
-
 public class StockDetailsView implements StockDetails {
     private static final long DURATION_FADE = 500;
     private final View view;
@@ -111,8 +109,8 @@ public class StockDetailsView implements StockDetails {
         if (history.size() < 2)
             setColor(grey);
         else {
-            setColor(history.get(0).getOpen().floatValue() > history.get(history.size() - 1).getClose().floatValue() ? green : red);
-            this.history = view.getLayoutDirection() == LAYOUT_DIRECTION_LTR ? Lists.reverse(history) : history;
+            setColor(history.get(0).getOpen().floatValue() < history.get(history.size() - 1).getClose().floatValue() ? green : red);
+            this.history = view.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL ? Lists.reverse(history) : history;
             chart.getAdapter().notifyDataSetChanged();
         }
     }

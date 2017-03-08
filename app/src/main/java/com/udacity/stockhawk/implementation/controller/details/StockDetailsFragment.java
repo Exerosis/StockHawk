@@ -7,17 +7,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.udacity.stockhawk.implementation.model.Stock;
 import com.udacity.stockhawk.implementation.model.StockStore;
 import com.udacity.stockhawk.implementation.view.details.StockDetails;
 import com.udacity.stockhawk.implementation.view.details.StockDetailsView;
 
 import rx.Subscription;
-import rx.schedulers.Schedulers;
 
 public class StockDetailsFragment extends Fragment implements StockDetailsController {
     public static final String ARGS_SYMBOL = "SYMBOL";
     private StockDetails view;
     private Subscription subscription;
+    private Stock stock;
 
     public static StockDetailsFragment newInstance(String symbol) {
         Bundle args = new Bundle();
@@ -32,8 +33,13 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
         view = new StockDetailsView(inflater, container, (AppCompatActivity) getActivity());
         view.setListener(this);
 
+        StockStore.getStock(getArguments().getString(ARGS_SYMBOL)).subscribe(stock -> {
+            for (Period period : Period.values())
+                stock.getHistory(period).subscribe();
+            this.stock = stock;
+        });
         for (Period period : Period.values())
-            StockStore.getHistory(getContext(), getArguments().getString(ARGS_SYMBOL), period).subscribeOn(Schedulers.io()).subscribe();
+            StockStore.getStock(getArguments().getString(ARGS_SYMBOL)).subscribe(stock -> stock.getHistory(period).subscribe());
 
         periodChanged(Period.WEEK);
         return view.getRoot();
@@ -43,6 +49,6 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
     public void periodChanged(Period period) {
         if (subscription != null)
             subscription.unsubscribe();
-        subscription = StockStore.getHistory(getContext(), getArguments().getString(ARGS_SYMBOL), period).subscribe(view::setHistory);
+        subscription = stock.getHistory(period).subscribe(view::setHistory);
     }
 }

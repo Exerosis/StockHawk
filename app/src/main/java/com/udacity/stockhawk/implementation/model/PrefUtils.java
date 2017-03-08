@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public final class PrefUtils {
+    private static final String KEY_DISPLAY_MODE = "DISPLAY_MODE";
 
     private PrefUtils() {
     }
@@ -61,30 +62,13 @@ public final class PrefUtils {
         editStockPref(context, symbol, false);
     }
 
-    public static String getDisplayMode(Context context) {
-        String key = context.getString(R.string.pref_display_mode_key);
-        String defaultValue = context.getString(R.string.pref_display_mode_default);
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        return prefs.getString(key, defaultValue);
+    public static boolean getDisplayMode(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context).getBoolean(KEY_DISPLAY_MODE, false);
     }
 
     public static void toggleDisplayMode(Context context) {
-        String key = context.getString(R.string.pref_display_mode_key);
-        String absoluteKey = context.getString(R.string.pref_display_mode_absolute_key);
-        String percentageKey = context.getString(R.string.pref_display_mode_percentage_key);
-
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-        String displayMode = getDisplayMode(context);
-
-        SharedPreferences.Editor editor = prefs.edit();
-
-        if (displayMode.equals(absoluteKey)) {
-            editor.putString(key, percentageKey);
-        } else {
-            editor.putString(key, absoluteKey);
-        }
-
+        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(context).edit();
+        editor.putBoolean(KEY_DISPLAY_MODE, !getDisplayMode(context));
         editor.apply();
     }
 

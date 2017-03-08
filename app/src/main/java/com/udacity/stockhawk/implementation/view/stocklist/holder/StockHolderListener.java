@@ -1,6 +1,7 @@
 package com.udacity.stockhawk.implementation.view.stocklist.holder;
 
-import yahoofinance.Stock;
+
+import com.udacity.stockhawk.implementation.model.Stock;
 
 public interface StockHolderListener {
     void onClick(Stock stock);
