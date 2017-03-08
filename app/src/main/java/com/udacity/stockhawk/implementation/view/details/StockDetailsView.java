@@ -122,7 +122,8 @@ public class StockDetailsView implements StockDetails {
 
         //Instantly
         chart.setLineColor(color);
-
+        tabs.setTabTextColors(color, darkColor);
+        
         //Animated
         ValueAnimator colorAnimator = ValueAnimator.ofArgb(this.color, color).setDuration(DURATION_FADE);
         colorAnimator.addUpdateListener(animation -> {
@@ -138,7 +139,6 @@ public class StockDetailsView implements StockDetails {
 
             activity.getWindow().setStatusBarColor(this.darkColor);
             tabs.setSelectedTabIndicatorColor(this.darkColor);
-            tabs.setTabTextColors(this.color, this.darkColor);
         });
 
         colorAnimator.start();
