@@ -8,6 +8,7 @@ import com.udacity.stockhawk.implementation.controller.details.Period;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -52,14 +53,14 @@ public class StockModel implements Parcelable {
     private final Map<Period, Observable<List<HistoricalQuote>>> historyObservables = new HashMap<>();
 
     //Cache
-    private final Map<Period, List<HistoricalQuote>> history = new HashMap<>();
-    private String symbol;
-    private String absoluteChange;
-    private String percentChange;
-    private String price;
-    private int color;
-    private int darkColor;
-    private int accentColor;
+    private Map<Period, List<HistoricalQuote>> history = new HashMap<>();
+    private String symbol = "";
+    private String absoluteChange = FORMAT_ABSOLUTE_CHANGE.format(0);
+    private String percentChange = FORMAT_PERCENT_CHANGE.format(0);
+    private String price = FORMAT_PRICE.format(0);
+    private int color = grey_primary;
+    private int darkColor = grey_primary_dark;
+    private int accentColor = grey_accent;
 
     protected StockModel(String symbol) {
         Observable<StockQuote> quoteObservable = Network.getQuote(symbol);
@@ -86,7 +87,12 @@ public class StockModel implements Parcelable {
         for (Period period : Period.values()) {
             Observable<List<HistoricalQuote>> historyObservable = Network.getHistory(symbol, period);
             historyObservable.subscribe(history -> this.history.put(period, history));
-            historyObservables.put(period, Observable.just(history.get(period)).repeatWhen(o -> historyObservable).replay(1).autoConnect());
+            historyObservables.put(period, Observable.fromCallable(() -> {
+                List<HistoricalQuote> history = this.history.get(period);
+                if (history == null)
+                    return new ArrayList<HistoricalQuote>();
+                return history;
+            }).repeatWhen(o -> historyObservable).replay(1).autoConnect());
         }
     }
 
@@ -127,7 +133,7 @@ public class StockModel implements Parcelable {
         return Store.getDisplayMode() ? percentChangeObservable : absoluteChangeObservable;
     }
 
-    
+
     @ColorRes
     public int getColor() {
         return color;
@@ -169,6 +175,7 @@ public class StockModel implements Parcelable {
         return object instanceof StockModel && ((StockModel) object).symbol.equalsIgnoreCase(symbol);
     }
 
+
     @Override
     public int describeContents() {
         return 0;
@@ -176,6 +183,45 @@ public class StockModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-
+        dest.writeInt(this.history.size());
+        for (Map.Entry<Period, List<HistoricalQuote>> entry : this.history.entrySet()) {
+            dest.writeInt(entry.getKey() == null ? -1 : entry.getKey().ordinal());
+            dest.writeList(entry.getValue());
+        }
+        dest.writeString(this.symbol);
+        dest.writeString(this.absoluteChange);
+        dest.writeString(this.percentChange);
+        dest.writeString(this.price);
+        dest.writeInt(this.color);
+        dest.writeInt(this.darkColor);
+        dest.writeInt(this.accentColor);
     }
+
+    public static final Parcelable.Creator<StockModel> CREATOR = new Parcelable.Creator<StockModel>() {
+        @Override
+        public StockModel createFromParcel(Parcel in) {
+            StockModel stock = new StockModel(in.readString());
+            int historySize = in.readInt();
+            stock.history = new HashMap<>(historySize);
+            for (int i = 0; i < historySize; i++) {
+                int tmpKey = in.readInt();
+                Period key = tmpKey == -1 ? null : Period.values()[tmpKey];
+                List<HistoricalQuote> value = new ArrayList<>();
+                in.readList(value, HistoricalQuote.class.getClassLoader());
+                stock.history.put(key, value);
+            }
+            stock.absoluteChange = in.readString();
+            stock.percentChange = in.readString();
+            stock.price = in.readString();
+            stock.color = in.readInt();
+            stock.darkColor = in.readInt();
+            stock.accentColor = in.readInt();
+            return stock;
+        }
+
+        @Override
+        public StockModel[] newArray(int size) {
+            return new StockModel[size];
+        }
+    };
 }

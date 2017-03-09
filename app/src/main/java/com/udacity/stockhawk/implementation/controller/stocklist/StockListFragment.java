@@ -94,8 +94,7 @@ public class StockListFragment extends Fragment implements StockListController {
     @Override
     public void onAdd(String symbol) {
         if (symbol != null && !symbol.isEmpty())
-            Network.getStock(symbol).observeOn(AndroidSchedulers.mainThread()).
-                    subscribe(stock -> {
+            Network.getStock(symbol).observeOn(AndroidSchedulers.mainThread()).subscribe(stock -> {
                         view.hideNetworkError();
                         dialog.dismissAllowingStateLoss();
                         view.getAdapter().notifyItemInserted(stocks.indexOf(Store.addStock(symbol)));

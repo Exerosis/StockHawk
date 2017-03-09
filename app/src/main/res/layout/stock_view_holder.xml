@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="?android:attr/listPreferredItemHeight"
     android:orientation="horizontal"
@@ -13,11 +14,12 @@
         android:gravity="center_vertical"
         android:paddingEnd="16dp"
         android:paddingStart="16dp"
-        android:textAppearance="@android:style/TextAppearance.Material.Large" />
+        android:textAppearance="@android:style/TextAppearance.Material.Large"
+        tools:text="NVDA" />
 
     <com.robinhood.spark.SparkView
         android:id="@+id/stock_holder_chart"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="match_parent"
         android:layout_weight="2" />
 
@@ -27,7 +29,8 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="center"
-        android:textAppearance="@android:style/TextAppearance.Material.Medium" />
+        android:textAppearance="@android:style/TextAppearance.Material.Medium"
+        tools:text="$100" />
 
     <TextView
         android:id="@+id/stock_holder_change"
@@ -39,6 +42,7 @@
         android:textAppearance="@android:style/TextAppearance.Material.Large"
         android:textColor="@android:color/white"
         android:textSize="22sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        tools:text="50%" />
 
 </LinearLayout>

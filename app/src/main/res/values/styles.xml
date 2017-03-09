@@ -7,25 +7,25 @@
         <item name="spark_SparkViewStyle">@style/MySparkViewStyle</item>
     </style>
 
-    <style name="AppTheme.Blue" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.Blue" parent="AppTheme">
         <item name="colorPrimary">@color/blue_primary</item>
         <item name="colorPrimaryDark">@color/blue_primary_dark</item>
         <item name="colorAccent">@color/blue_accent</item>
     </style>
 
-    <style name="AppTheme.Grey" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.Grey" parent="AppTheme">
         <item name="colorPrimary">@color/grey_primary</item>
         <item name="colorPrimaryDark">@color/grey_primary_dark</item>
         <item name="colorAccent">@color/grey_accent</item>
     </style>
 
-    <style name="AppTheme.Red" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.Red" parent="AppTheme">
         <item name="colorPrimary">@color/red_primary</item>
         <item name="colorPrimaryDark">@color/red_primary_dark</item>
         <item name="colorAccent">@color/red_accent</item>
     </style>
 
-    <style name="AppTheme.Green" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.Green" parent="AppTheme">
         <item name="colorPrimary">@color/green_primary</item>
         <item name="colorPrimaryDark">@color/green_primary_dark</item>
         <item name="colorAccent">@color/green_accent</item>

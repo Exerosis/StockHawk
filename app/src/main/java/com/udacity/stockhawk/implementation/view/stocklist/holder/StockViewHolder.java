@@ -76,8 +76,8 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
             if (subscription != null)
                 subscription.unsubscribe();
 
-        subscriptions[0] = stock.getColorObservable().subscribeOn(AndroidSchedulers.mainThread()).subscribe(color -> change.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), color)));
         subscriptions[1] = stock.getPriceObservable().subscribeOn(AndroidSchedulers.mainThread()).subscribe(price::setText);
+        subscriptions[0] = stock.getColorObservable().subscribeOn(AndroidSchedulers.mainThread()).subscribe(color -> change.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), color)));
         subscriptions[2] = stock.getChangeObservable().subscribeOn(AndroidSchedulers.mainThread()).subscribe(change::setText);
         subscriptions[3] = stock.getHistoryObservable(Period.MONTH).subscribeOn(AndroidSchedulers.mainThread()).subscribe(history -> {
             this.history = history;

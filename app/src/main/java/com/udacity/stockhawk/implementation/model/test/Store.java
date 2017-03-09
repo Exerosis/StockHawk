@@ -31,8 +31,10 @@ public class Store {
         if (stocks == null) {
             if (Hawk.contains(KEY_STOCKS))
                 stocks = Hawk.get(KEY_STOCKS);
-            else
+            else {
                 stocks = new ArraySet<>();
+                addStock("NVDA");
+            }
             Observable.interval(5, TimeUnit.MINUTES).mergeWith(hook).subscribe(tick -> {
                 if (stocks.size() > 0)
                     Hawk.put(KEY_STOCKS, stocks);
