@@ -26,12 +26,16 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
     private StockModel stock;
     private List<HistoricalQuote> history = new ArrayList<>();
 
-    public static StockDetailsFragment newInstance(StockModel stock) {
-        Bundle args = new Bundle();
-        args.putParcelable(ARGS_STOCK, stock);
+    public static StockDetailsFragment newInstance(Bundle args) {
         StockDetailsFragment fragment = new StockDetailsFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public static StockDetailsFragment newInstance(StockModel stock) {
+        Bundle args = new Bundle();
+        args.putParcelable(ARGS_STOCK, stock);
+        return newInstance(args);
     }
 
     @Override

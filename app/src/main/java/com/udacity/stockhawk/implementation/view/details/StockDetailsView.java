@@ -35,9 +35,9 @@ public class StockDetailsView implements StockDetails {
     @BindView(R.id.stock_details_background)
     protected View background;
     @BindColor(R.color.grey_primary)
-    private int color;
+    protected int color;
     @BindColor(R.color.grey_primary_dark)
-    private int darkColor;
+    protected int darkColor;
 
     private StockDetailsListener listener;
 

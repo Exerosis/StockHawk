@@ -2,6 +2,7 @@ package com.udacity.stockhawk.implementation.controller.addstock;
 
 import android.app.Dialog;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 
@@ -13,7 +14,7 @@ public class AddStockDialog extends DialogFragment implements AddStockController
     private AddStock view;
     private AddStockListener listener;
 
-
+    @NonNull
     @Override
     public Dialog onCreateDialog(Bundle state) {
         view = new AddStockView(LayoutInflater.from(getActivity()));
@@ -31,5 +32,10 @@ public class AddStockDialog extends DialogFragment implements AddStockController
         this.listener = listener;
         if (view != null)
             view.setListener(listener);
+    }
+
+    @Override
+    public void showError() {
+        view.showError();
     }
 }

@@ -7,4 +7,6 @@ import com.udacity.stockhawk.mvc.ViewBase;
 
 public interface AddStock extends ViewBase, Listenable<AddStockListener> {
     Dialog getDialog();
+
+    void showError();
 }

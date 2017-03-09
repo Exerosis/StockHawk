@@ -28,7 +28,7 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     protected TextView symbol;
     @BindView(R.id.stock_holder_price)
     protected TextView price;
-    @BindView(R.id.stock_holder_price)
+    @BindView(R.id.stock_holder_change)
     protected TextView change;
     @BindView(R.id.stock_holder_chart)
     protected SparkView chart;

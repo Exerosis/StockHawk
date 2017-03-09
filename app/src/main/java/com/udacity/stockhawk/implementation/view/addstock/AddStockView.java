@@ -81,6 +81,12 @@ public class AddStockView implements AddStock {
     }
 
     @Override
+    public void showError() {
+        input.setError("Not a valid stock!");
+        input.clearComposingText();
+    }
+
+    @Override
     public AddStockListener getListener() {
         return listener;
     }

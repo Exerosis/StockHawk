@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.udacity.stockhawk.R;
 
-import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_STOCK;
 import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.newInstance;
 
 public class StockDetailsContainerActivity extends AppCompatActivity implements StockDetailsContainerController {
@@ -15,7 +14,7 @@ public class StockDetailsContainerActivity extends AppCompatActivity implements 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.container);
-        getSupportFragmentManager().beginTransaction().replace(getContainerID(), newInstance(getIntent().getExtras().getString(ARGS_STOCK))).commit();
+        getSupportFragmentManager().beginTransaction().replace(getContainerID(), newInstance(getIntent().getExtras())).commit();
     }
 
     @Override
