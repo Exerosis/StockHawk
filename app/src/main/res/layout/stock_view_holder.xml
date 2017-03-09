@@ -21,7 +21,8 @@
         android:id="@+id/stock_holder_chart"
         android:layout_width="200dp"
         android:layout_height="match_parent"
-        android:layout_weight="2" />
+        android:layout_weight="2"
+        android:padding="8dp" />
 
     <TextView
         android:id="@+id/stock_holder_price"

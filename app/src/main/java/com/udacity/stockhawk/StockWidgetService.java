@@ -3,7 +3,6 @@ package com.udacity.stockhawk;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.support.v4.util.ArraySet;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -12,17 +11,17 @@ import android.widget.RemoteViewsService;
 import com.robinhood.spark.SparkAdapter;
 import com.robinhood.spark.SparkView;
 import com.udacity.stockhawk.implementation.controller.details.Period;
-import com.udacity.stockhawk.implementation.model.test.StockModel;
-import com.udacity.stockhawk.implementation.model.test.Store;
+import com.udacity.stockhawk.implementation.model.HistoryModel;
+import com.udacity.stockhawk.implementation.model.QuoteModel;
+import com.udacity.stockhawk.implementation.model.StockModel;
+import com.udacity.stockhawk.implementation.model.Store;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import yahoofinance.histquotes.HistoricalQuote;
-
 public class StockWidgetService extends RemoteViewsService {
-    private List<HistoricalQuote> history = new ArrayList<>();
-    private ArraySet<StockModel> stocks = new ArraySet<>();
+    private HistoryModel history;
+    private List<StockModel> stocks = new ArrayList<>();
     private SparkView chart;
 
     @Override
@@ -33,17 +32,19 @@ public class StockWidgetService extends RemoteViewsService {
         chart.setAdapter(new SparkAdapter() {
             @Override
             public int getCount() {
-                return history.size();
+                return history == null ? 0 : history.getQuotes().size();
             }
 
             @Override
             public Object getItem(int index) {
-                return history.get(index);
+                return history.getQuotes().get(index);
             }
 
             @Override
             public float getY(int index) {
-                return history.get(index).getClose().floatValue();
+                if (index == 0)
+                    return history.getQuotes().get(index).getOpen();
+                return history.getQuotes().get(index).getAdjustedClose();
             }
         });
 
@@ -72,12 +73,18 @@ public class StockWidgetService extends RemoteViewsService {
             @Override
             public RemoteViews getViewAt(int index) {
                 RemoteViews view = new RemoteViews(StockWidgetService.this.getPackageName(), R.layout.stock_widget_view_holder);
-                StockModel stock = stocks.valueAt(index);
+                StockModel stock = stocks.get(index);
 
-                view.setTextViewText(R.id.stock_holder_price, stock.getPrice());
-                view.setTextViewText(R.id.stock_holder_symbol, stock.getSymbol());
-                view.setTextViewText(R.id.stock_holder_change, stock.getChange());
-                view.setInt(R.id.stock_holder_change, "setBackgroundColor", stock.getColor());
+                QuoteModel quote = stock.getQuote();
+                if (quote == null)
+                    return view;
+                view.setTextViewText(R.id.stock_holder_price, String.valueOf(quote.getAdjustedClose()));
+                view.setTextViewText(R.id.stock_holder_symbol, quote.getSymbol());
+                view.setInt(R.id.stock_holder_change, "setBackgroundColor", quote.getColor());
+
+                //TODO add change to qutoes
+                view.setTextViewText(R.id.stock_holder_change, "");
+
 
                 history = stock.getHistory(Period.MONTH);
                 chart.getAdapter().notifyDataSetChanged();

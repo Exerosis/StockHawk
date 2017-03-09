@@ -8,23 +8,19 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.robinhood.spark.SparkAdapter;
-import com.udacity.stockhawk.implementation.model.test.StockModel;
+import com.udacity.stockhawk.implementation.model.HistoryModel;
+import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.implementation.view.details.StockDetails;
 import com.udacity.stockhawk.implementation.view.details.StockDetailsView;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
-import yahoofinance.histquotes.HistoricalQuote;
+import java.util.HashMap;
+import java.util.Map;
 
 public class StockDetailsFragment extends Fragment implements StockDetailsController {
     public static final String ARGS_STOCK = "STOCK";
+    private Map<Period, HistoryModel> histories = new HashMap<>();
     private StockDetails view;
-    private Subscription subscription;
-    private StockModel stock;
-    private List<HistoricalQuote> history = new ArrayList<>();
+    private Period period = Period.MONTH;
 
     public static StockDetailsFragment newInstance(Bundle args) {
         StockDetailsFragment fragment = new StockDetailsFragment();
@@ -46,38 +42,34 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
         view.setAdapter(new SparkAdapter() {
             @Override
             public int getCount() {
-                return history.size();
+                return histories.get(period).getQuotes().size();
             }
 
             @Override
             public Object getItem(int index) {
-                return history.get(index);
+                return histories.get(period).getQuotes().get(index);
             }
 
             @Override
             public float getY(int index) {
-                return history.get(index).getClose().floatValue();
+                return histories.get(period).getQuotes().get(index).getAdjustedClose();
             }
         });
 
-
         StockModel stock = getArguments().getParcelable(ARGS_STOCK);
-        if (stock != null) {
-            stock.getColorObservable().observeOn(AndroidSchedulers.mainThread()).subscribe(view::setColor);
-            stock.getDarkColorObservable().observeOn(AndroidSchedulers.mainThread()).subscribe(view::setDarkColor);
-        }
-
-        onChangePeriod(Period.WEEK);
+        if (stock != null)
+            stock.getHistoriesSubject().subscribe(histories -> this.histories = histories);
         return view.getRoot();
     }
 
     @Override
     public void onChangePeriod(Period period) {
-        if (subscription != null)
-            subscription.unsubscribe();
-        subscription = stock.getHistoryObservable(period).subscribe(history -> {
-            this.history = history;
-            view.getAdapter().notifyDataSetChanged();
-        });
+        this.period = period;
+        refresh();
+    }
+
+    private void refresh() {
+        view.getAdapter().notifyDataSetChanged();
+        view.setColor(histories.get(period).getColor(), histories.get(period).getDarkColor());
     }
 }

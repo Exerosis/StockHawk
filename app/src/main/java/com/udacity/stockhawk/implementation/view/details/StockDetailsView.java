@@ -69,10 +69,12 @@ public class StockDetailsView implements StockDetails {
         });
     }
 
+
     @Override
-    public void setColor(@ColorRes int colorID) {
+    public void setColor(@ColorRes int colorID, @ColorRes int darkColorID) {
         int color = ContextCompat.getColor(view.getContext(), colorID);
-        if (this.color == color)
+        int darkColor = ContextCompat.getColor(view.getContext(), darkColorID);
+        if (this.color == color || this.darkColor == darkColor)
             return;
 
         tabs.setTabTextColors(color, darkColor);
@@ -86,24 +88,15 @@ public class StockDetailsView implements StockDetails {
             toolbar.setBackgroundColor(this.color);
         });
         colorAnimator.start();
-    }
 
-    @Override
-    public void setDarkColor(@ColorRes int colorID) {
-        int color = ContextCompat.getColor(view.getContext(), colorID);
-        if (this.darkColor == color)
-            return;
-
-        tabs.setTabTextColors(this.color, color);
-
-        ValueAnimator colorAnimator = ValueAnimator.ofArgb(this.darkColor, color).setDuration(DURATION_FADE);
-        colorAnimator.addUpdateListener(animation -> {
+        ValueAnimator darkColorAnimator = ValueAnimator.ofArgb(this.darkColor, darkColor).setDuration(DURATION_FADE);
+        darkColorAnimator.addUpdateListener(animation -> {
             this.darkColor = (int) animation.getAnimatedValue();
 
             activity.getWindow().setStatusBarColor(this.darkColor);
             tabs.setSelectedTabIndicatorColor(this.darkColor);
         });
-        colorAnimator.start();
+        darkColorAnimator.start();
     }
 
     @Override

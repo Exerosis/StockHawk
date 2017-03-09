@@ -1,4 +1,4 @@
-package com.udacity.stockhawk.implementation.model.test;
+package com.udacity.stockhawk.implementation.model;
 
 
 import com.google.common.collect.HashBasedTable;
@@ -35,7 +35,10 @@ public class Network {
             Stock stock = YahooFinance.get(symbol);
             stocks.put(symbol, stock);
             return stock.getQuote();
-        }).repeatWhen(o -> Observable.interval(1, TimeUnit.MINUTES).mergeWith(hook)).replay(1).autoConnect();
+        }).repeatWhen(o -> Observable.interval(1, TimeUnit.MINUTES)).replay(1).autoConnect();
+        observable.subscribe(val -> {
+            System.out.println(val);
+        });
         quoteObservables.put(symbol, observable);
         return observable;
     }

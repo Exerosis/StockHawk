@@ -3,7 +3,6 @@ package com.udacity.stockhawk.implementation.controller.stocklist;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.util.ArraySet;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,13 +15,15 @@ import com.orhanobut.hawk.Hawk;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.addstock.AddStockDialog;
 import com.udacity.stockhawk.implementation.controller.details.container.StockDetailsContainerActivity;
-import com.udacity.stockhawk.implementation.model.test.Network;
-import com.udacity.stockhawk.implementation.model.test.StockModel;
-import com.udacity.stockhawk.implementation.model.test.Store;
+import com.udacity.stockhawk.implementation.model.Network;
+import com.udacity.stockhawk.implementation.model.StockModel;
+import com.udacity.stockhawk.implementation.model.Store;
 import com.udacity.stockhawk.implementation.view.stocklist.StockList;
 import com.udacity.stockhawk.implementation.view.stocklist.StockListView;
 import com.udacity.stockhawk.implementation.view.stocklist.holder.StockViewHolder;
 import com.udacity.stockhawk.utilities.NetworkUtilities;
+
+import java.util.List;
 
 import rx.android.schedulers.AndroidSchedulers;
 
@@ -31,8 +32,9 @@ import static com.udacity.stockhawk.implementation.controller.details.StockDetai
 public class StockListFragment extends Fragment implements StockListController {
     private StockList view;
     private AddStockDialog dialog;
-    private ArraySet<StockModel> stocks;
+    private List<StockModel> stocks;
 
+    @SuppressWarnings("unchecked")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         view = new StockListView(inflater, container);
@@ -41,6 +43,7 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog.setListener(this);
 
         Hawk.init(getContext()).build();
+        Hawk.deleteAll();
         setHasOptionsMenu(true);
 
         stocks = Store.getStocks();
@@ -55,7 +58,7 @@ public class StockListFragment extends Fragment implements StockListController {
 
             @Override
             public void onBindViewHolder(StockViewHolder holder, int position) {
-                holder.setStock(stocks.valueAt(position));
+                holder.setStock(stocks.get(position));
                 holder.setListener(StockListFragment.this);
                 view.hideStockError();
                 view.setRefreshing(false);
@@ -95,10 +98,10 @@ public class StockListFragment extends Fragment implements StockListController {
     public void onAdd(String symbol) {
         if (symbol != null && !symbol.isEmpty())
             Network.getStock(symbol).observeOn(AndroidSchedulers.mainThread()).subscribe(stock -> {
-                        view.hideNetworkError();
-                        dialog.dismissAllowingStateLoss();
-                        view.getAdapter().notifyItemInserted(stocks.indexOf(Store.addStock(symbol)));
-                    }, throwable -> dialog.showError());
+                view.hideNetworkError();
+                dialog.dismissAllowingStateLoss();
+                view.getAdapter().notifyItemInserted(stocks.indexOf(Store.addStock(symbol)));
+            }, throwable -> dialog.showError());
     }
 
     @Override

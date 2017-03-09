@@ -1,10 +1,12 @@
-package com.udacity.stockhawk.implementation.model.test;
+package com.udacity.stockhawk.implementation.model;
 
 
-import android.support.v4.util.ArraySet;
+import android.os.Parcel;
 
 import com.orhanobut.hawk.Hawk;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
@@ -13,7 +15,7 @@ import rx.subjects.PublishSubject;
 public class Store {
     private static final String KEY_STOCKS = "STOCKS";
     private static final String KEY_DISPLAY_MODE = "DISPLAY_MODE";
-    private static ArraySet<StockModel> stocks;
+    private static List<StockModel> stocks;
     private static PublishSubject<Long> hook = PublishSubject.create();
 
     public static boolean getDisplayMode() {
@@ -26,20 +28,26 @@ public class Store {
         return displayMode;
     }
 
-
-    public static ArraySet<StockModel> getStocks() {
-        if (stocks == null) {
-            if (Hawk.contains(KEY_STOCKS))
-                stocks = Hawk.get(KEY_STOCKS);
-            else {
-                stocks = new ArraySet<>();
-                addStock("NVDA");
+    public static List<StockModel> getStocks() {
+        if (stocks != null)
+            return stocks;
+        stocks = new ArrayList<>();
+        if (Hawk.contains(KEY_STOCKS))
+            for (Parcel parcel : Hawk.<ArrayList<Parcel>>get(KEY_STOCKS))
+                stocks.add(StockModel.CREATOR.createFromParcel(parcel));
+        else
+            addStock("NVDA");
+        Observable.interval(5, TimeUnit.MINUTES).mergeWith(hook).subscribe(tick -> {
+            if (stocks.size() < 1)
+                return;
+            List<Parcel> parcels = new ArrayList<>();
+            for (StockModel stock : stocks) {
+                Parcel parcel = Parcel.obtain();
+                stock.writeToParcel(parcel, 0);
+                parcels.add(parcel);
             }
-            Observable.interval(5, TimeUnit.MINUTES).mergeWith(hook).subscribe(tick -> {
-                if (stocks.size() > 0)
-                    Hawk.put(KEY_STOCKS, stocks);
-            });
-        }
+            Hawk.put(KEY_STOCKS, parcels);
+        });
         return stocks;
     }
 

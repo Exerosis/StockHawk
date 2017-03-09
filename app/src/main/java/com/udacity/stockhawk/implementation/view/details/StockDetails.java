@@ -8,7 +8,5 @@ import com.udacity.stockhawk.mvc.Listenable;
 import com.udacity.stockhawk.mvc.ViewBase;
 
 public interface StockDetails extends ViewBase, Listenable<StockDetailsListener>, Adaptable<SparkAdapter> {
-    void setColor(@ColorRes int colorID);
-
-    void setDarkColor(@ColorRes int colorID);
+    void setColor(@ColorRes int colorID, @ColorRes int darkColorID);
 }
