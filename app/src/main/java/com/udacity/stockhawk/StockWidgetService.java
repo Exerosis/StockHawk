@@ -11,14 +11,15 @@ import android.widget.RemoteViewsService;
 
 import com.robinhood.spark.SparkAdapter;
 import com.robinhood.spark.SparkView;
-import com.udacity.stockhawk.implementation.controller.details.Period;
 import com.udacity.stockhawk.implementation.model.PrefUtils;
-import com.udacity.stockhawk.implementation.model.StockStore;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindColor;
+import yahoofinance.Stock;
+import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 
 public class StockWidgetService extends RemoteViewsService {
@@ -81,23 +82,30 @@ public class StockWidgetService extends RemoteViewsService {
             @Override
             public RemoteViews getViewAt(int index) {
                 RemoteViews view = new RemoteViews(StockWidgetService.this.getPackageName(), R.layout.stock_widget_holder);
-                StockStore.getStock(symbols.valueAt(index)).subscribe(stock -> {
+                try {
+                    Stock stock = YahooFinance.get(symbols.valueAt(index));
+                    view.setTextViewText(R.id.stock_holder_price, stock.getQuote().getPrice().toString());
                     view.setTextViewText(R.id.stock_holder_symbol, stock.getSymbol());
-                    stock.getPrice().subscribe(price -> {
-                        Log.i("Widget", stock.getSymbol() + " Price: " + price);
-                        view.setTextViewText(R.id.stock_holder_price, price);
-                    });
-                    stock.getChange(StockWidgetService.this).subscribe(change -> view.setTextViewText(R.id.stock_holder_change, change));
-                    stock.getHistory(Period.MONTH).subscribe(history -> {
-                        StockWidgetService.this.history = history;
-                        chart.getAdapter().notifyDataSetChanged();
-
-                        //TODO, figure out how to get the size correctly.
-//                        int width = 0;
-//                        int height = 0;
-//                        view.setImageViewBitmap(R.id.stock_holder_chart, getBitmapFromView(chart, width, height));
-                    });
-                });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+//                StockStore.getStock(symbols.valueAt(index)).subscribe(stock -> {
+//                    view.setTextViewText(R.id.stock_holder_symbol, stock.getSymbol());
+//                    stock.getPrice().subscribe(price -> {
+//                        Log.i("Widget", stock.getSymbol() + " Price: " + price);
+//                        view.setTextViewText(R.id.stock_holder_price, price);
+//                    });
+//                    stock.getChange(StockWidgetService.this).subscribe(change -> view.setTextViewText(R.id.stock_holder_change, change));
+//                    stock.getHistory(Period.MONTH).subscribe(history -> {
+//                        StockWidgetService.this.history = history;
+//                        chart.getAdapter().notifyDataSetChanged();
+//
+//                        //TODO, figure out how to get the size correctly.
+////                        int width = 0;
+////                        int height = 0;
+////                        view.setImageViewBitmap(R.id.stock_holder_chart, getBitmapFromView(chart, width, height));
+//                    });
+//                });
                 return view;
             }
 

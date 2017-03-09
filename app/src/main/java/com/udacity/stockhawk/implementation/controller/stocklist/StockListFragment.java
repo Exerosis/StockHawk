@@ -45,8 +45,6 @@ public class StockListFragment extends Fragment implements StockListController {
 
         Hawk.init(getContext()).build();
 
-        //  Observable.timer(30, TimeUnit.SECONDS).observeOn(AndroidSchedulers.mainThread()).subscribe(tick -> view.getAdapter().notifyDataSetChanged());
-
         symbols = getStocks(getContext());
 
         setHasOptionsMenu(true);
