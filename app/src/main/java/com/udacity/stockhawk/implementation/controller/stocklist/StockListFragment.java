@@ -16,25 +16,22 @@ import com.orhanobut.hawk.Hawk;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.addstock.AddStockDialog;
 import com.udacity.stockhawk.implementation.controller.details.container.StockDetailsContainerActivity;
-import com.udacity.stockhawk.implementation.model.Stock;
-import com.udacity.stockhawk.implementation.model.StockStore;
+import com.udacity.stockhawk.implementation.model.test.Network;
+import com.udacity.stockhawk.implementation.model.test.StockModel;
+import com.udacity.stockhawk.implementation.model.test.Store;
 import com.udacity.stockhawk.implementation.view.stocklist.StockList;
 import com.udacity.stockhawk.implementation.view.stocklist.StockListView;
-import com.udacity.stockhawk.implementation.view.stocklist.holder.StockHolder;
 import com.udacity.stockhawk.implementation.view.stocklist.holder.StockViewHolder;
 import com.udacity.stockhawk.utilities.NetworkUtilities;
 
-import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_SYMBOL;
-import static com.udacity.stockhawk.implementation.model.PrefUtils.addStock;
-import static com.udacity.stockhawk.implementation.model.PrefUtils.getDisplayMode;
-import static com.udacity.stockhawk.implementation.model.PrefUtils.getStocks;
-import static com.udacity.stockhawk.implementation.model.PrefUtils.removeStock;
-import static com.udacity.stockhawk.implementation.model.PrefUtils.toggleDisplayMode;
+import rx.android.schedulers.AndroidSchedulers;
+
+import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_STOCK;
 
 public class StockListFragment extends Fragment implements StockListController {
-    private ArraySet<String> symbols;
     private StockList view;
     private AddStockDialog dialog;
+    private ArraySet<StockModel> stocks;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -44,10 +41,11 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog.setListener(this);
 
         Hawk.init(getContext()).build();
-
-        symbols = getStocks(getContext());
-
         setHasOptionsMenu(true);
+
+        stocks = Store.getStocks();
+        if (stocks.size() < 1)
+            view.showStockError();
 
         view.setAdapter(new RecyclerView.Adapter<StockViewHolder>() {
             @Override
@@ -57,18 +55,15 @@ public class StockListFragment extends Fragment implements StockListController {
 
             @Override
             public void onBindViewHolder(StockViewHolder holder, int position) {
-                StockStore.getStock(symbols.valueAt(position)).subscribe(stock -> {
-                    holder.setStock(stock);
-                    holder.setListener(StockListFragment.this);
-                    view.hideStockError();
-                    view.hideNetworkError();
-                    view.setRefreshing(false);
-                });
+                holder.setStock(stocks.valueAt(position));
+                holder.setListener(StockListFragment.this);
+                view.hideStockError();
+                view.setRefreshing(false);
             }
 
             @Override
             public int getItemCount() {
-                return symbols.size();
+                return stocks.size();
             }
         });
 
@@ -76,10 +71,45 @@ public class StockListFragment extends Fragment implements StockListController {
     }
 
     @Override
-    public void onClick(Stock stock) {
-        if (stock != null)
-            startActivity(new Intent(getContext(), StockDetailsContainerActivity.class).
-                    putExtra(ARGS_SYMBOL, stock.getSymbol()));
+    public void onRefresh() {
+        if (!NetworkUtilities.isOnline(getContext()))
+            view.showNetworkError();
+        else {
+            Network.refresh();
+            view.hideNetworkError();
+        }
+        if (stocks.size() > 0)
+            return;
+        view.showStockError();
+        view.setRefreshing(false);
+    }
+
+    @Override
+    public void onRemove(StockModel stock) {
+        view.getAdapter().notifyItemRemoved(Store.removeStock(stock));
+        if (stocks.size() < 1)
+            view.showStockError();
+    }
+
+    @Override
+    public void onAdd(String symbol) {
+        if (symbol != null && !symbol.isEmpty())
+            Network.getStock(symbol).observeOn(AndroidSchedulers.mainThread()).
+                    subscribe(stock -> {
+                        view.hideNetworkError();
+                        dialog.dismissAllowingStateLoss();
+                        view.getAdapter().notifyItemInserted(stocks.indexOf(Store.addStock(symbol)));
+                    }, throwable -> dialog.showError());
+    }
+
+    @Override
+    public void onCancel() {
+        dialog.dismissAllowingStateLoss();
+    }
+
+    @Override
+    public void onClick(StockModel stock) {
+        startActivity(new Intent(getContext(), StockDetailsContainerActivity.class).putExtra(ARGS_STOCK, stock));
     }
 
     @Override
@@ -87,59 +117,20 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog.show(getFragmentManager(), "AddStockDialog");
     }
 
-    @Override
-    public void onSwipe(StockHolder holder, int direction) {
-        String symbol = holder.getStock().getSymbol();
-        symbols.remove(symbol);
-        removeStock(getContext(), symbol);
-        view.getAdapter().notifyItemRemoved(symbols.indexOf(symbol));
-    }
-
-    @Override
-    public void onRefresh() {
-        if (!NetworkUtilities.isOnline(getContext()))
-            view.showNetworkError();
-        else if (getStocks(getContext()).size() == 0)
-            view.showStockError();
-        else
-            view.getAdapter().notifyDataSetChanged();
-    }
-
-    @Override
-    public boolean onAdd(String symbol) {
-        if (symbol == null || symbol.isEmpty())
-            return false;
-        if (!NetworkUtilities.isOnline(getContext())) {
-            view.showNetworkError();
-            return false;
-        }
-        symbols.add(symbol);
-        view.getAdapter().notifyItemInserted(symbols.indexOf(symbol));
-        addStock(getContext(), symbol);
-        dialog.dismissAllowingStateLoss();
-        return true;
-    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.main_activity_settings, menu);
         MenuItem item = menu.findItem(R.id.action_change_units);
-        item.setIcon(getDisplayMode(getContext()) ? R.drawable.ic_percentage : R.drawable.ic_dollar);
+        item.setIcon(Store.getDisplayMode() ? R.drawable.ic_percentage : R.drawable.ic_dollar);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() != R.id.action_change_units)
             return super.onOptionsItemSelected(item);
-
-        toggleDisplayMode(getContext());
-        item.setIcon(getDisplayMode(getContext()) ? R.drawable.ic_percentage : R.drawable.ic_dollar);
-        view.getAdapter().notifyDataSetChanged();
+        item.setIcon(Store.toggleDisplayMode() ? R.drawable.ic_percentage : R.drawable.ic_dollar);
+        onRefresh();
         return true;
-    }
-
-    @Override
-    public void onCancel() {
-        dialog.dismissAllowingStateLoss();
     }
 }

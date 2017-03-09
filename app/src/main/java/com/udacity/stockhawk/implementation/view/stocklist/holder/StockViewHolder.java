@@ -8,31 +8,86 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.robinhood.spark.SparkAdapter;
+import com.robinhood.spark.SparkView;
 import com.udacity.stockhawk.R;
-import com.udacity.stockhawk.implementation.model.Stock;
+import com.udacity.stockhawk.implementation.controller.details.Period;
+import com.udacity.stockhawk.implementation.model.test.StockModel;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import yahoofinance.histquotes.HistoricalQuote;
 
 public class StockViewHolder extends RecyclerView.ViewHolder implements StockHolder {
     @BindView(R.id.stock_holder_symbol)
-    protected TextView symbolView;
+    protected TextView symbol;
     @BindView(R.id.stock_holder_price)
-    protected TextView priceView;
-    @BindView(R.id.stock_holder_change)
-    protected TextView changeView;
+    protected TextView price;
+    @BindView(R.id.stock_holder_price)
+    protected TextView change;
+    @BindView(R.id.stock_holder_chart)
+    protected SparkView chart;
 
+    private final Subscription[] subscriptions = new Subscription[4];
     private StockHolderListener listener;
-    private Stock stock;
-    private boolean displayMode;
+    private StockModel stock;
+    private List<HistoricalQuote> history = new ArrayList<>();
 
     public StockViewHolder(ViewGroup container) {
         super(LayoutInflater.from(container.getContext()).inflate(R.layout.stock_view_holder, container, false));
         ButterKnife.bind(this, getRoot());
+
+        chart.setCornerRadius(80);
+
+        chart.setAdapter(new SparkAdapter() {
+            @Override
+            public int getCount() {
+                return history.size();
+            }
+
+            @Override
+            public Object getItem(int index) {
+                return history.get(index);
+            }
+
+            @Override
+            public float getY(int index) {
+                return history.get(index).getClose().floatValue();
+            }
+        });
+
         itemView.setOnClickListener(view -> {
             if (listener != null)
                 listener.onClick(stock);
         });
+    }
+
+    @Override
+    public void setStock(StockModel stock) {
+        this.stock = stock;
+        symbol.setText(stock.getSymbol());
+
+        for (Subscription subscription : subscriptions)
+            if (subscription != null)
+                subscription.unsubscribe();
+
+        subscriptions[0] = stock.getColorObservable().subscribeOn(AndroidSchedulers.mainThread()).subscribe(color -> change.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), color)));
+        subscriptions[1] = stock.getPriceObservable().subscribeOn(AndroidSchedulers.mainThread()).subscribe(price::setText);
+        subscriptions[2] = stock.getChangeObservable().subscribeOn(AndroidSchedulers.mainThread()).subscribe(change::setText);
+        subscriptions[3] = stock.getHistoryObservable(Period.MONTH).subscribeOn(AndroidSchedulers.mainThread()).subscribe(history -> {
+            this.history = history;
+            chart.getAdapter().notifyDataSetChanged();
+        });
+    }
+
+    @Override
+    public StockModel getStock() {
+        return stock;
     }
 
     @Override
@@ -53,19 +108,5 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     @Override
     public Bundle getViewState() {
         return null;
-    }
-
-    @Override
-    public void setStock(Stock stock) {
-        this.stock = stock;
-        symbolView.setText(stock.getSymbol());
-        stock.getColor().subscribe(color -> changeView.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), color)));
-        stock.getPrice().subscribe(priceView::setText);
-        stock.getChange(getRoot().getContext()).subscribe(changeView::setText);
-    }
-
-    @Override
-    public Stock getStock() {
-        return stock;
     }
 }

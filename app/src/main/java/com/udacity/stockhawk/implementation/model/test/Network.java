@@ -20,6 +20,7 @@ import yahoofinance.histquotes.Interval;
 import yahoofinance.quotes.stock.StockQuote;
 
 public class Network {
+    private static final Map<String, Observable<Stock>> stockObservables = new HashMap<>();
     private static final Map<String, Observable<StockQuote>> quoteObservables = new HashMap<>();
     private static final Table<String, Period, Observable<List<HistoricalQuote>>> historyObservables = HashBasedTable.create();
     private static final Map<String, Stock> stocks = new HashMap<>();
@@ -38,7 +39,6 @@ public class Network {
         quoteObservables.put(symbol, observable);
         return observable;
     }
-
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
     public static Observable<List<HistoricalQuote>> getHistory(String symbol, Period period) {
@@ -68,6 +68,7 @@ public class Network {
                 break;
             }
         }
+
         Observable<List<HistoricalQuote>> observable = Observable.fromCallable(() -> {
             if (stocks.containsKey(symbol))
                 return stocks.get(symbol).getHistory(from, interval);
@@ -77,6 +78,16 @@ public class Network {
         }).repeatWhen(o -> Observable.interval(6, TimeUnit.HOURS)).replay(1).autoConnect();
         historyObservables.put(symbol, period, observable);
         return observable;
+    }
+
+    public static Observable<Stock> getStock(String symbol) {
+        return Observable.fromCallable(() -> {
+            if (stocks.containsKey(symbol))
+                return stocks.get(symbol);
+            Stock stock = YahooFinance.get(symbol);
+            stocks.put(symbol, stock);
+            return stock;
+        });
     }
 
     public static void refresh() {

@@ -2,26 +2,24 @@ package com.udacity.stockhawk.implementation.view.details;
 
 import android.animation.ValueAnimator;
 import android.os.Bundle;
+import android.support.annotation.ColorRes;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.google.common.collect.Lists;
 import com.robinhood.spark.SparkAdapter;
 import com.robinhood.spark.SparkView;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.details.Period;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import butterknife.BindColor;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import yahoofinance.histquotes.HistoricalQuote;
 
 public class StockDetailsView implements StockDetails {
     private static final long DURATION_FADE = 500;
@@ -36,26 +34,12 @@ public class StockDetailsView implements StockDetails {
     protected Toolbar toolbar;
     @BindView(R.id.stock_details_background)
     protected View background;
-
     @BindColor(R.color.grey_primary)
-    protected int grey;
+    private int color;
     @BindColor(R.color.grey_primary_dark)
-    protected int darkGrey;
-
-    @BindColor(R.color.red_primary)
-    protected int red;
-    @BindColor(R.color.red_primary_dark)
-    protected int darkRed;
-
-    @BindColor(R.color.green_primary)
-    protected int green;
-    @BindColor(R.color.green_primary_dark)
-    protected int darkGreen;
+    private int darkColor;
 
     private StockDetailsListener listener;
-    private List<HistoricalQuote> history = new ArrayList<>();
-    private int color;
-    private int darkColor;
 
     public StockDetailsView(LayoutInflater inflater, ViewGroup container, AppCompatActivity activity) {
         view = inflater.inflate(R.layout.stock_details_view, container, false);
@@ -64,32 +48,13 @@ public class StockDetailsView implements StockDetails {
 
         activity.setSupportActionBar(toolbar);
 
-        color = grey;
-        darkColor = darkGrey;
-
         chart.setCornerRadius(80);
-        chart.setAdapter(new SparkAdapter() {
-            @Override
-            public int getCount() {
-                return history.size();
-            }
-
-            @Override
-            public Object getItem(int index) {
-                return history.get(index);
-            }
-
-            @Override
-            public float getY(int index) {
-                return history.get(index).getClose().floatValue();
-            }
-        });
 
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if (listener != null)
-                    listener.periodChanged(Period.valueOf(String.valueOf(tab.getText()).replace(" ", "_").toUpperCase()));
+                    listener.onChangePeriod(Period.valueOf(String.valueOf(tab.getText()).replace(" ", "_").toUpperCase()));
             }
 
             @Override
@@ -105,44 +70,50 @@ public class StockDetailsView implements StockDetails {
     }
 
     @Override
-    public void setHistory(List<HistoricalQuote> history) {
-        if (history.size() < 2)
-            setColor(grey);
-        else {
-            setColor(history.get(0).getOpen().floatValue() < history.get(history.size() - 1).getClose().floatValue() ? green : red);
-            this.history = view.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL ? Lists.reverse(history) : history;
-            chart.getAdapter().notifyDataSetChanged();
-        }
-    }
-
-    private void setColor(int color) {
+    public void setColor(@ColorRes int colorID) {
+        int color = ContextCompat.getColor(view.getContext(), colorID);
         if (this.color == color)
             return;
-        int darkColor = color == grey ? darkGrey : color == green ? darkGreen : darkRed;
 
-        //Instantly
-        chart.setLineColor(color);
         tabs.setTabTextColors(color, darkColor);
-        
-        //Animated
+
         ValueAnimator colorAnimator = ValueAnimator.ofArgb(this.color, color).setDuration(DURATION_FADE);
         colorAnimator.addUpdateListener(animation -> {
             this.color = (int) animation.getAnimatedValue();
 
+            chart.setLineColor(this.color);
             background.setBackgroundColor(this.color);
             toolbar.setBackgroundColor(this.color);
         });
+        colorAnimator.start();
+    }
 
-        ValueAnimator darkColorAnimator = ValueAnimator.ofArgb(this.darkColor, darkColor).setDuration(DURATION_FADE);
-        darkColorAnimator.addUpdateListener(animation -> {
+    @Override
+    public void setDarkColor(@ColorRes int colorID) {
+        int color = ContextCompat.getColor(view.getContext(), colorID);
+        if (this.darkColor == color)
+            return;
+
+        tabs.setTabTextColors(this.color, color);
+
+        ValueAnimator colorAnimator = ValueAnimator.ofArgb(this.darkColor, color).setDuration(DURATION_FADE);
+        colorAnimator.addUpdateListener(animation -> {
             this.darkColor = (int) animation.getAnimatedValue();
 
             activity.getWindow().setStatusBarColor(this.darkColor);
             tabs.setSelectedTabIndicatorColor(this.darkColor);
         });
-
         colorAnimator.start();
-        darkColorAnimator.start();
+    }
+
+    @Override
+    public SparkAdapter getAdapter() {
+        return chart.getAdapter();
+    }
+
+    @Override
+    public void setAdapter(@NonNull SparkAdapter adapter) {
+        chart.setAdapter(adapter);
     }
 
     @Override

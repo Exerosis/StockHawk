@@ -5,7 +5,6 @@ import android.support.v4.util.ArraySet;
 
 import com.orhanobut.hawk.Hawk;
 
-import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
@@ -13,10 +12,22 @@ import rx.subjects.PublishSubject;
 
 public class Store {
     private static final String KEY_STOCKS = "STOCKS";
+    private static final String KEY_DISPLAY_MODE = "DISPLAY_MODE";
     private static ArraySet<StockModel> stocks;
     private static PublishSubject<Long> hook = PublishSubject.create();
 
-    public static Collection<StockModel> getStocks() {
+    public static boolean getDisplayMode() {
+        return Hawk.get(KEY_DISPLAY_MODE, true);
+    }
+
+    public static boolean toggleDisplayMode() {
+        boolean displayMode = !getDisplayMode();
+        Hawk.put(KEY_DISPLAY_MODE, displayMode);
+        return displayMode;
+    }
+
+
+    public static ArraySet<StockModel> getStocks() {
         if (stocks == null) {
             if (Hawk.contains(KEY_STOCKS))
                 stocks = Hawk.get(KEY_STOCKS);
@@ -44,10 +55,11 @@ public class Store {
         return stock;
     }
 
-    public static ArraySet<StockModel> removeStock(StockModel stock) {
+    public static int removeStock(StockModel stock) {
+        int index = stocks.indexOf(stock);
         stocks.remove(stock);
         save();
-        return stocks;
+        return index;
     }
 
     public static void save() {

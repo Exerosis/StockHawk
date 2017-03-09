@@ -67,7 +67,7 @@ public class StockListView implements StockList {
 
             @Override
             public void onSwiped(RecyclerView.ViewHolder holder, int direction) {
-                listener.onSwipe((StockHolder) holder, direction);
+                listener.onRemove(((StockHolder) holder).getStock());
             }
 
             @Override
@@ -94,7 +94,7 @@ public class StockListView implements StockList {
             }
         }).attachToRecyclerView(recyclerView);
 
-        fab.setOnClickListener(view1 -> {
+        fab.setOnClickListener(fab -> {
             if (listener != null)
                 listener.onAddClicked();
         });
