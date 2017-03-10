@@ -77,8 +77,8 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
             historySubscription.unsubscribe();
 
         quoteSubscription = stock.getQuoteSubject().subscribe(quote -> {
-            price.setText("");
-            change.setText("");
+            price.setText(quote.getPrice());
+            change.setText(quote.getChange());
             change.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), quote.getColor()));
         });
         historySubscription = stock.getHistorySubject(Period.MONTH).subscribe(history -> {

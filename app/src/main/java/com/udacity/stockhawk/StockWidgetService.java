@@ -80,11 +80,8 @@ public class StockWidgetService extends RemoteViewsService {
                     return view;
                 view.setTextViewText(R.id.stock_holder_price, String.valueOf(quote.getAdjustedClose()));
                 view.setTextViewText(R.id.stock_holder_symbol, quote.getSymbol());
+                view.setTextViewText(R.id.stock_holder_change, quote.getChange());
                 view.setInt(R.id.stock_holder_change, "setBackgroundColor", quote.getColor());
-
-                //TODO add change to qutoes
-                view.setTextViewText(R.id.stock_holder_change, "");
-
 
                 history = stock.getHistory(Period.MONTH);
                 chart.getAdapter().notifyDataSetChanged();

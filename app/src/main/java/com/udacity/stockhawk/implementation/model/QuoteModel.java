@@ -12,8 +12,29 @@ import java.util.Locale;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.quotes.stock.StockQuote;
 
+import static com.udacity.stockhawk.R.color.green_accent;
+import static com.udacity.stockhawk.R.color.green_primary;
+import static com.udacity.stockhawk.R.color.grey_accent;
+import static com.udacity.stockhawk.R.color.grey_primary;
+import static com.udacity.stockhawk.R.color.grey_primary_dark;
+import static com.udacity.stockhawk.R.color.red_accent;
+import static com.udacity.stockhawk.R.color.red_primary;
+import static com.udacity.stockhawk.R.color.red_primary_dark;
+
 public class QuoteModel implements Parcelable {
-    private static final DecimalFormat FORMAT_PRICE = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
+    private static final DecimalFormat FORMAT_ABSOLUTE_CHANGE;
+    private static final DecimalFormat FORMAT_PERCENT_CHANGE;
+    private static final DecimalFormat FORMAT_PRICE;
+
+    static {
+        FORMAT_ABSOLUTE_CHANGE = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
+        FORMAT_ABSOLUTE_CHANGE.setPositivePrefix("+$");
+        FORMAT_PERCENT_CHANGE = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
+        FORMAT_PERCENT_CHANGE.setMaximumFractionDigits(2);
+        FORMAT_PERCENT_CHANGE.setMinimumFractionDigits(2);
+        FORMAT_PERCENT_CHANGE.setPositivePrefix("+");
+        FORMAT_PRICE = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
+    }
 
     //Data
     private String symbol;
@@ -23,7 +44,9 @@ public class QuoteModel implements Parcelable {
     private float close;
     private float adjustedClose;
     private Calendar date;
-    private Long volume;
+    private long volume;
+    private String percentChange;
+    private String absoluteChange;
 
     //Color
     @ColorRes
@@ -35,6 +58,8 @@ public class QuoteModel implements Parcelable {
 
 
     public QuoteModel(StockQuote quote) {
+        this(quote.getChange().floatValue());
+        percentChange = FORMAT_PERCENT_CHANGE.format(quote.getChangeInPercent().floatValue() * 100);
         symbol = quote.getSymbol();
         open = quote.getOpen().floatValue();
         low = quote.getDayLow().floatValue();
@@ -46,6 +71,8 @@ public class QuoteModel implements Parcelable {
     }
 
     public QuoteModel(HistoricalQuote quote) {
+        this(quote.getAdjClose().floatValue() - quote.getOpen().floatValue());
+        percentChange = FORMAT_PERCENT_CHANGE.format(100);
         symbol = quote.getSymbol();
         open = quote.getOpen().floatValue();
         low = quote.getLow().floatValue();
@@ -54,6 +81,29 @@ public class QuoteModel implements Parcelable {
         adjustedClose = quote.getAdjClose().floatValue();
         date = quote.getDate();
         volume = quote.getVolume();
+    }
+
+    private QuoteModel(float change) {
+        absoluteChange = FORMAT_ABSOLUTE_CHANGE.format(change);
+        color = change > 0 ? green_primary : change < 0 ? red_primary : grey_primary;
+        darkColor = change > 0 ? grey_primary_dark : change < 0 ? red_primary_dark : grey_primary_dark;
+        accentColor = change > 0 ? green_accent : change < 0 ? red_accent : grey_accent;
+    }
+
+    public String getPrice() {
+        return FORMAT_PRICE.format(getAdjustedClose());
+    }
+
+    public String getChange() {
+        return Store.getDisplayMode() ? percentChange : absoluteChange;
+    }
+
+    public String getAbsoluteChange() {
+        return absoluteChange;
+    }
+
+    public String getPercentChange() {
+        return percentChange;
     }
 
     public String getSymbol() {
@@ -84,7 +134,7 @@ public class QuoteModel implements Parcelable {
         return date;
     }
 
-    public Long getVolume() {
+    public long getVolume() {
         return volume;
     }
 
@@ -108,29 +158,39 @@ public class QuoteModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel out, int flags) {
-        out.writeString(this.symbol);
-        out.writeFloat(this.high);
-        out.writeFloat(this.low);
-        out.writeFloat(this.close);
-        out.writeFloat(this.adjustedClose);
-        out.writeSerializable(this.date);
-        out.writeValue(this.volume);
-        out.writeInt(this.color);
-        out.writeInt(this.darkColor);
-        out.writeInt(this.accentColor);
+        //Data
+        out.writeString(symbol);
+        out.writeFloat(high);
+        out.writeFloat(low);
+        out.writeFloat(close);
+        out.writeFloat(adjustedClose);
+        out.writeSerializable(date);
+        out.writeLong(volume);
+        out.writeString(percentChange);
+        out.writeString(absoluteChange);
+
+        //Colors
+        out.writeInt(color);
+        out.writeInt(darkColor);
+        out.writeInt(accentColor);
     }
 
     private QuoteModel(Parcel in) {
-        this.symbol = in.readString();
-        this.high = in.readFloat();
-        this.low = in.readFloat();
-        this.close = in.readFloat();
-        this.adjustedClose = in.readFloat();
-        this.date = (Calendar) in.readSerializable();
-        this.volume = (Long) in.readValue(Long.class.getClassLoader());
-        this.color = in.readInt();
-        this.darkColor = in.readInt();
-        this.accentColor = in.readInt();
+        //Data
+        symbol = in.readString();
+        high = in.readFloat();
+        low = in.readFloat();
+        close = in.readFloat();
+        adjustedClose = in.readFloat();
+        date = (Calendar) in.readSerializable();
+        volume = in.readLong();
+        percentChange = in.readString();
+        absoluteChange = in.readString();
+
+        //Colors
+        color = in.readInt();
+        darkColor = in.readInt();
+        accentColor = in.readInt();
     }
 
     public static final Parcelable.Creator<QuoteModel> CREATOR = new Parcelable.Creator<QuoteModel>() {
