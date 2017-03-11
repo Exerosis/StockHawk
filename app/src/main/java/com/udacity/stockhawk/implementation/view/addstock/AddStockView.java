@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.StringRes;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -81,8 +82,8 @@ public class AddStockView implements AddStock {
     }
 
     @Override
-    public void showError() {
-        input.setError("Not a valid stock!");
+    public void showError(@StringRes int error) {
+        input.setError(getRoot().getResources().getString(error));
         input.clearComposingText();
     }
 

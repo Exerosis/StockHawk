@@ -42,7 +42,7 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
         view.setAdapter(new SparkAdapter() {
             @Override
             public int getCount() {
-                return histories.get(period).getQuotes().size();
+                return histories.get(period) == null ? 0 : histories.get(period).getQuotes().size();
             }
 
             @Override
@@ -58,7 +58,10 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
 
         StockModel stock = getArguments().getParcelable(ARGS_STOCK);
         if (stock != null)
-            stock.getHistoriesSubject().subscribe(histories -> this.histories = histories);
+            stock.getHistoriesSubject().subscribe(histories -> {
+                this.histories = histories;
+                refresh();
+            });
         return view.getRoot();
     }
 

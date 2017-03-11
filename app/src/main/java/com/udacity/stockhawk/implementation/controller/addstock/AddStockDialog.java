@@ -3,6 +3,7 @@ package com.udacity.stockhawk.implementation.controller.addstock;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 
@@ -35,7 +36,7 @@ public class AddStockDialog extends DialogFragment implements AddStockController
     }
 
     @Override
-    public void showError() {
-        view.showError();
+    public void showError(@StringRes int error) {
+        view.showError(error);
     }
 }

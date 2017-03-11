@@ -15,7 +15,6 @@ import com.orhanobut.hawk.Hawk;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.addstock.AddStockDialog;
 import com.udacity.stockhawk.implementation.controller.details.container.StockDetailsContainerActivity;
-import com.udacity.stockhawk.implementation.model.Network;
 import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.implementation.model.Store;
 import com.udacity.stockhawk.implementation.view.stocklist.StockList;
@@ -25,8 +24,9 @@ import com.udacity.stockhawk.utilities.NetworkUtilities;
 
 import java.util.List;
 
-import rx.android.schedulers.AndroidSchedulers;
-
+import static com.udacity.stockhawk.R.string.dialog_error_blank;
+import static com.udacity.stockhawk.R.string.dialog_error_network;
+import static com.udacity.stockhawk.R.string.dialog_error_unexpected;
 import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_STOCK;
 
 public class StockListFragment extends Fragment implements StockListController {
@@ -47,7 +47,7 @@ public class StockListFragment extends Fragment implements StockListController {
         setHasOptionsMenu(true);
 
         stocks = Store.getStocks();
-        if (stocks.size() < 1)
+        if (stocks.isEmpty())
             view.showStockError();
 
         view.setAdapter(new RecyclerView.Adapter<StockViewHolder>() {
@@ -78,10 +78,10 @@ public class StockListFragment extends Fragment implements StockListController {
         if (!NetworkUtilities.isOnline(getContext()))
             view.showNetworkError();
         else {
-            Network.refresh();
+            Store.refresh();
             view.hideNetworkError();
         }
-        if (stocks.size() > 0)
+        if (!stocks.isEmpty())
             return;
         view.showStockError();
         view.setRefreshing(false);
@@ -90,18 +90,23 @@ public class StockListFragment extends Fragment implements StockListController {
     @Override
     public void onRemove(StockModel stock) {
         view.getAdapter().notifyItemRemoved(Store.removeStock(stock));
-        if (stocks.size() < 1)
+        if (stocks.isEmpty())
             view.showStockError();
     }
 
     @Override
     public void onAdd(String symbol) {
-        if (symbol != null && !symbol.isEmpty())
-            Network.getStock(symbol).observeOn(AndroidSchedulers.mainThread()).subscribe(stock -> {
+        if (!NetworkUtilities.isOnline(getContext()))
+            dialog.showError(dialog_error_network);
+        else if (symbol == null || symbol.isEmpty())
+            dialog.showError(dialog_error_blank);
+        else
+            Store.addStock(symbol).subscribe(index -> {
+                view.getAdapter().notifyItemInserted(index);
                 view.hideNetworkError();
+                view.hideStockError();
                 dialog.dismissAllowingStateLoss();
-                view.getAdapter().notifyItemInserted(stocks.indexOf(Store.addStock(symbol)));
-            }, throwable -> dialog.showError());
+            }, throwable -> dialog.showError(dialog_error_unexpected));
     }
 
     @Override

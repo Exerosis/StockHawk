@@ -2,107 +2,69 @@ package com.udacity.stockhawk.implementation.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.udacity.stockhawk.implementation.controller.details.Period;
 
+import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.subjects.BehaviorSubject;
-import yahoofinance.YahooFinance;
-import yahoofinance.histquotes.HistoricalQuote;
-import yahoofinance.quotes.stock.StockQuote;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
+import static com.udacity.stockhawk.implementation.model.Network.getTransformer;
+
 public class StockModel implements Parcelable {
-    private final BehaviorSubject<QuoteModel> quoteSubject = BehaviorSubject.create();
-    private final BehaviorSubject<Map<Period, HistoryModel>> historiesSubject = BehaviorSubject.create();
+    private final BehaviorSubject<QuoteModel> quoteSubject;
+    private final BehaviorSubject<Map<Period, HistoryModel>> historiesSubject;
 
-    private final ListMultimap<Period, QuoteModel> histories = ArrayListMultimap.create();
-    private String symbol;
-    private QuoteModel quote;
-
-    private StockModel(String symbol, QuoteModel restoredQuote) {
-        this.symbol = symbol;
-
-        Observable<StockQuote> observable = Observable.fromCallable(() -> {
-            return YahooFinance.get("NVDA").getQuote();
-        }).repeatWhen(o -> Observable.interval(20, TimeUnit.SECONDS)).replay(1).autoConnect();
-        observable.observeOn(AndroidSchedulers.mainThread()).subscribe(val -> {
-            System.out.println(val);
-        });
-
-        Observable<StockQuote> quoteObservable = Network.getQuote(symbol);
-        quoteObservable.subscribe(quote -> {
-            quoteSubject.onNext(this.quote = new QuoteModel(quote));
-            historiesSubject.onNext(getHistories());
-        });
-
-        if (restoredQuote == null)
-            quoteObservable.toBlocking().first();
-
-        for (Period period : Period.values())
-            Network.getHistory(symbol, period).subscribe(history -> {
-                if (history.size() < 2)
-                    return;
-                histories.get(period).clear();
-                for (HistoricalQuote quote : history)
-                    histories.put(period, new QuoteModel(quote));
-                historiesSubject.onNext(getHistories());
-            });
+    public static StockModel newInstance(@NonNull String symbol) throws IOException {
+        return new StockModel(Network.getQuote(symbol), Network.getHistories(symbol));
     }
 
-    public StockModel(String symbol) {
-        this(symbol, null);
+    private StockModel(@NonNull QuoteModel quote, @NonNull Map<Period, HistoryModel> histories) {
+        this.quoteSubject = BehaviorSubject.create(quote);
+        this.historiesSubject = BehaviorSubject.create(histories);
+
     }
 
-    public BehaviorSubject<QuoteModel> getQuoteSubject() {
-        return quoteSubject;
-    }
 
     public QuoteModel getQuote() {
-        return quote;
+        return quoteSubject.getValue();
     }
 
-    public Observable<HistoryModel> getHistorySubject(Period period) {
-        return historiesSubject.filter(histories -> histories.containsKey(period)).map(histories -> histories.get(period));
-    }
-
-    //TODO maybe .replay(1).autoConnect()
-    public Observable<Map<Period, HistoryModel>> getHistoriesSubject() {
-        return historiesSubject.filter(histories -> {
-            for (Period period : Period.values())
-                if (!histories.containsKey(period))
-                    return false;
-            return true;
-        });
-    }
-
-    public HistoryModel getHistory(Period period) {
-        List<QuoteModel> history = histories.get(period);
-        history = Lists.reverse(history);
-        history.add(this.quote);
-        return new HistoryModel(history);
+    public Observable<QuoteModel> getQuoteSubject() {
+        return quoteSubject.compose(getTransformer());
     }
 
     public Map<Period, HistoryModel> getHistories() {
-        Map<Period, HistoryModel> histories = new HashMap<>();
-        for (Period period : Period.values())
-            histories.put(period, getHistory(period));
-        return histories;
+        return historiesSubject.getValue();
     }
 
-    public String getSymbol() {
-        return symbol;
+    public Observable<Map<Period, HistoryModel>> getHistoriesSubject() {
+        return historiesSubject.compose(getTransformer());
     }
 
+    public HistoryModel getHistory(Period period) {
+        return getHistories().get(period);
+    }
+
+    public Observable<HistoryModel> getHistorySubject(Period period) {
+        return historiesSubject.filter(history -> history.containsKey(period)).map(history -> history.get(period)).compose(getTransformer());
+    }
+
+    public void refresh() {
+        try {
+            QuoteModel quote = Network.getQuote(getQuote().getSymbol());
+            quoteSubject.onNext(quote);
+            for (HistoryModel history : historiesSubject.getValue().values())
+                history.getQuotes().set(history.getQuotes().size() - 1, quote);
+            historiesSubject.onNext(historiesSubject.getValue());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     //--Parcelable--
     @Override
@@ -112,20 +74,35 @@ public class StockModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel out, int flags) {
-        out.writeString(this.symbol);
-        out.writeParcelable(this.quote, flags);
-
-        for (Period period : Period.values())
-            out.writeList(histories.get(period));
+        out.writeParcelable(getQuote(), flags);
+        Map<Period, HistoryModel> histories = getHistories();
+        out.writeInt(histories.size());
+        for (Map.Entry<Period, HistoryModel> entry : histories.entrySet()) {
+            out.writeInt(entry.getKey().ordinal());
+            out.writeParcelable(entry.getValue(), flags);
+        }
     }
 
     public static final Parcelable.Creator<StockModel> CREATOR = new Parcelable.Creator<StockModel>() {
         @Override
         public StockModel createFromParcel(Parcel in) {
-            StockModel stock = new StockModel(in.readString(), in.readParcelable(QuoteModel.class.getClassLoader()));
-            for (Period period : Period.values())
-                stock.histories.putAll(period, in.createTypedArrayList(QuoteModel.CREATOR));
-            return stock;
+            QuoteModel quote = in.readParcelable(QuoteModel.class.getClassLoader());
+            if (quote == null)
+                throw new IllegalStateException("Quote cannot be null!");
+
+            for (StockModel stock : Store.getStocks())
+                if (stock.getQuote().equals(quote))
+                    return stock;
+
+            Map<Period, HistoryModel> history = new HashMap<>();
+            int size = in.readInt();
+            for (int i = 0; i < size; i++)
+                history.put(Period.values()[in.readInt()], in.readParcelable(HistoryModel.class.getClassLoader()));
+
+            if (history.isEmpty())
+                throw new IllegalStateException("History cannot be empty!");
+
+            return new StockModel(quote, history);
         }
 
         @Override

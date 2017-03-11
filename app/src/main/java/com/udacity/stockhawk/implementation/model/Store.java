@@ -1,6 +1,5 @@
 package com.udacity.stockhawk.implementation.model;
 
-
 import android.os.Parcel;
 
 import com.orhanobut.hawk.Hawk;
@@ -10,13 +9,22 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
 public class Store {
     private static final String KEY_STOCKS = "STOCKS";
     private static final String KEY_DISPLAY_MODE = "DISPLAY_MODE";
+    private static final PublishSubject<Long> SAVE_HOOK = PublishSubject.create();
+    private static final PublishSubject<Long> REFRESH_HOOK = PublishSubject.create();
+    private static final Observable<Long> SAVE_OBSERVABLE = Observable.interval(30, TimeUnit.SECONDS).mergeWith(SAVE_HOOK).subscribeOn(Schedulers.io()).unsubscribeOn(Schedulers.io());
+    private static final Observable<Long> REFRESH_OBSERVABLE = Observable.interval(1, TimeUnit.MINUTES).mergeWith(REFRESH_HOOK).mergeWith(SAVE_HOOK).subscribeOn(Schedulers.io()).unsubscribeOn(Schedulers.io());
+
     private static List<StockModel> stocks;
-    private static PublishSubject<Long> hook = PublishSubject.create();
+    private static Subscription saveSubscription;
+    private static Subscription refreshSubscription;
 
     public static boolean getDisplayMode() {
         return Hawk.get(KEY_DISPLAY_MODE, true);
@@ -35,10 +43,44 @@ public class Store {
         if (Hawk.contains(KEY_STOCKS))
             for (Parcel parcel : Hawk.<ArrayList<Parcel>>get(KEY_STOCKS))
                 stocks.add(StockModel.CREATOR.createFromParcel(parcel));
-        else
-            addStock("NVDA");
-        Observable.interval(5, TimeUnit.MINUTES).mergeWith(hook).subscribe(tick -> {
-            if (stocks.size() < 1)
+        subscribe();
+        return stocks;
+    }
+
+    public static Observable<Integer> addStock(String symbol) {
+        return Observable.fromCallable(() -> {
+            StockModel stock = StockModel.newInstance(symbol);
+            stocks.add(stock);
+            if (!stocks.isEmpty())
+                subscribe();
+            save();
+            return stocks.indexOf(stock);
+        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public static int removeStock(StockModel stock) {
+        int index = stocks.indexOf(stock);
+        stocks.remove(stock);
+        if (stocks.isEmpty())
+            unsubscribe();
+        save();
+        return index;
+    }
+
+    public static void save() {
+        SAVE_HOOK.onNext(1L);
+    }
+
+    public static void refresh() {
+        REFRESH_HOOK.onNext(1L);
+    }
+
+    private static void subscribe() {
+        refreshSubscription = REFRESH_OBSERVABLE.subscribe(tick -> {
+            for (StockModel stock : stocks) stock.refresh();
+        });
+        saveSubscription = SAVE_OBSERVABLE.subscribe(tick -> {
+            if (stocks.isEmpty())
                 return;
             List<Parcel> parcels = new ArrayList<>();
             for (StockModel stock : stocks) {
@@ -48,31 +90,10 @@ public class Store {
             }
             Hawk.put(KEY_STOCKS, parcels);
         });
-        return stocks;
     }
 
-    public static StockModel getStock(String symbol) {
-        for (StockModel stock : stocks)
-            if (stock.getSymbol().equalsIgnoreCase(symbol))
-                return stock;
-        return addStock(symbol);
-    }
-
-    public static StockModel addStock(String symbol) {
-        StockModel stock = new StockModel(symbol);
-        stocks.add(stock);
-        save();
-        return stock;
-    }
-
-    public static int removeStock(StockModel stock) {
-        int index = stocks.indexOf(stock);
-        stocks.remove(stock);
-        save();
-        return index;
-    }
-
-    public static void save() {
-        hook.onNext(1L);
+    private static void unsubscribe() {
+        saveSubscription.unsubscribe();
+        refreshSubscription.unsubscribe();
     }
 }

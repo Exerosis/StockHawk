@@ -1,52 +1,38 @@
 package com.udacity.stockhawk.implementation.model;
 
-
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 import com.udacity.stockhawk.implementation.controller.details.Period;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
-import rx.subjects.PublishSubject;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
-import yahoofinance.quotes.stock.StockQuote;
 
 public class Network {
-    private static final Map<String, Observable<Stock>> stockObservables = new HashMap<>();
-    private static final Map<String, Observable<StockQuote>> quoteObservables = new HashMap<>();
-    private static final Table<String, Period, Observable<List<HistoricalQuote>>> historyObservables = HashBasedTable.create();
-    private static final Map<String, Stock> stocks = new HashMap<>();
-    private static final PublishSubject<Long> hook = PublishSubject.create();
+    private static final Map<String, Stock> STOCKS = new HashMap<>();
 
-    public static Observable<StockQuote> getQuote(String symbol) {
-        if (quoteObservables.containsKey(symbol))
-            return quoteObservables.get(symbol);
-        Observable<StockQuote> observable = Observable.fromCallable(() -> {
-            if (stocks.containsKey(symbol))
-                return stocks.get(symbol).getQuote(true);
-            Stock stock = YahooFinance.get(symbol);
-            stocks.put(symbol, stock);
-            return stock.getQuote();
-        }).repeatWhen(o -> Observable.interval(1, TimeUnit.MINUTES)).replay(1).autoConnect();
-        observable.subscribe(val -> {
-            System.out.println(val);
-        });
-        quoteObservables.put(symbol, observable);
-        return observable;
+    public static QuoteModel getQuote(String symbol) throws IOException {
+        return new QuoteModel(getStock(symbol).getQuote(true));
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public static Observable<List<HistoricalQuote>> getHistory(String symbol, Period period) {
-        if (historyObservables.contains(symbol, period))
-            return historyObservables.get(symbol, period);
+    public static Map<Period, HistoryModel> getHistories(String symbol) throws IOException {
+        Map<Period, HistoryModel> histories = new HashMap<>();
+        for (Period period : Period.values())
+            histories.put(period, getHistory(symbol, period));
+        return histories;
+    }
+
+    public static HistoryModel getHistory(String symbol, Period period) throws IOException {
         Calendar from = Calendar.getInstance();
         Interval interval;
         switch (period) {
@@ -72,28 +58,24 @@ public class Network {
             }
         }
 
-        Observable<List<HistoricalQuote>> observable = Observable.fromCallable(() -> {
-            if (stocks.containsKey(symbol))
-                return stocks.get(symbol).getHistory(from, interval);
-            Stock stock = YahooFinance.get(symbol, from, interval);
-            stocks.put(symbol, stock);
-            return stock.getHistory();
-        }).repeatWhen(o -> Observable.interval(6, TimeUnit.HOURS)).replay(1).autoConnect();
-        historyObservables.put(symbol, period, observable);
-        return observable;
+        List<QuoteModel> quotes = new ArrayList<>();
+        for (HistoricalQuote historicalQuote : getStock(symbol).getHistory(from, interval))
+            quotes.add(new QuoteModel(historicalQuote));
+        Collections.reverse(quotes);
+        quotes.add(getQuote(symbol));
+        return new HistoryModel(quotes);
     }
 
-    public static Observable<Stock> getStock(String symbol) {
-        return Observable.fromCallable(() -> {
-            if (stocks.containsKey(symbol))
-                return stocks.get(symbol);
-            Stock stock = YahooFinance.get(symbol);
-            stocks.put(symbol, stock);
-            return stock;
-        });
+    public static Stock getStock(String symbol) throws IOException {
+        if (STOCKS.containsKey(symbol))
+            return STOCKS.get(symbol);
+        Stock stock = YahooFinance.get(symbol);
+        STOCKS.put(symbol, stock);
+        return stock;
     }
 
-    public static void refresh() {
-        hook.onNext(1L);
+
+    public static <T> Observable.Transformer<T, T> getTransformer() {
+        return observable -> observable.subscribeOn(Schedulers.io()).unsubscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 }

@@ -59,7 +59,7 @@ public class QuoteModel implements Parcelable {
 
     public QuoteModel(StockQuote quote) {
         this(quote.getChange().floatValue());
-        percentChange = FORMAT_PERCENT_CHANGE.format(quote.getChangeInPercent().floatValue() * 100);
+        percentChange = FORMAT_PERCENT_CHANGE.format(quote.getChangeInPercent().floatValue() / 100);
         symbol = quote.getSymbol();
         open = quote.getOpen().floatValue();
         low = quote.getDayLow().floatValue();
@@ -95,7 +95,7 @@ public class QuoteModel implements Parcelable {
     }
 
     public String getChange() {
-        return Store.getDisplayMode() ? percentChange : absoluteChange;
+        return com.udacity.stockhawk.implementation.model.Store.getDisplayMode() ? percentChange : absoluteChange;
     }
 
     public String getAbsoluteChange() {
@@ -148,6 +148,12 @@ public class QuoteModel implements Parcelable {
 
     public int getAccentColor() {
         return accentColor;
+    }
+
+
+    @Override
+    public boolean equals(Object object) {
+        return object instanceof QuoteModel && ((QuoteModel) object).symbol.equals(symbol);
     }
 
     //--Parcelable--

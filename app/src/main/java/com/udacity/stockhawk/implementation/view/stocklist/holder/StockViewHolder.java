@@ -69,7 +69,6 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     @Override
     public void setStock(StockModel stock) {
         this.stock = stock;
-        symbol.setText(stock.getSymbol());
 
         if (quoteSubscription != null)
             quoteSubscription.unsubscribe();
@@ -77,6 +76,7 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
             historySubscription.unsubscribe();
 
         quoteSubscription = stock.getQuoteSubject().subscribe(quote -> {
+            symbol.setText(quote.getSymbol());
             price.setText(quote.getPrice());
             change.setText(quote.getChange());
             change.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), quote.getColor()));
