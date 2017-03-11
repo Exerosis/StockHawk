@@ -1,10 +1,11 @@
 package com.udacity.stockhawk.implementation.model;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import com.udacity.stockhawk.implementation.controller.details.Period;
+import com.udacity.stockhawk.utilities.Model;
+import com.udacity.stockhawk.utilities.Modelable;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,7 +16,7 @@ import rx.subjects.BehaviorSubject;
 
 import static com.udacity.stockhawk.implementation.model.Network.getTransformer;
 
-public class StockModel implements Parcelable {
+public class StockModel implements Modelable {
     private final BehaviorSubject<QuoteModel> quoteSubject;
     private final BehaviorSubject<Map<Period, HistoryModel>> historiesSubject;
 
@@ -66,10 +67,16 @@ public class StockModel implements Parcelable {
         }
     }
 
-    //--Parcelable--
+    //--Modelable
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    @Override
+    public void writeToModel(Model out) {
+        out.writeModelable(getQuote());
+        out.writeMap(getHistories());
     }
 
     @Override
@@ -83,13 +90,21 @@ public class StockModel implements Parcelable {
         }
     }
 
-    public static final Parcelable.Creator<StockModel> CREATOR = new Parcelable.Creator<StockModel>() {
+    public static final Modelable.Creator<StockModel> CREATOR = new Modelable.Creator<StockModel>() {
+        @Override
+        public StockModel createFromModel(Model in) {
+            QuoteModel quote = in.readModelable(QuoteModel.CREATOR);
+            for (StockModel stock : Store.getStocks())
+                if (stock.getQuote().equals(quote))
+                    return stock;
+            return new StockModel(quote, in.readMap(Period.class, HistoryModel.CREATOR));
+        }
+
         @Override
         public StockModel createFromParcel(Parcel in) {
             QuoteModel quote = in.readParcelable(QuoteModel.class.getClassLoader());
             if (quote == null)
                 throw new IllegalStateException("Quote cannot be null!");
-
             for (StockModel stock : Store.getStocks())
                 if (stock.getQuote().equals(quote))
                     return stock;

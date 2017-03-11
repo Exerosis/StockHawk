@@ -1,8 +1,10 @@
 package com.udacity.stockhawk.implementation.model;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.ColorRes;
+
+import com.udacity.stockhawk.utilities.Model;
+import com.udacity.stockhawk.utilities.Modelable;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -21,7 +23,7 @@ import static com.udacity.stockhawk.R.color.red_accent;
 import static com.udacity.stockhawk.R.color.red_primary;
 import static com.udacity.stockhawk.R.color.red_primary_dark;
 
-public class QuoteModel implements Parcelable {
+public class QuoteModel implements Modelable {
     private static final DecimalFormat FORMAT_ABSOLUTE_CHANGE;
     private static final DecimalFormat FORMAT_PERCENT_CHANGE;
     private static final DecimalFormat FORMAT_PRICE;
@@ -156,10 +158,29 @@ public class QuoteModel implements Parcelable {
         return object instanceof QuoteModel && ((QuoteModel) object).symbol.equals(symbol);
     }
 
-    //--Parcelable--
+    //--Modelable--
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    @Override
+    public void writeToModel(Model out) {
+        //Data
+        out.writeString(symbol);
+        out.writeFloat(high);
+        out.writeFloat(low);
+        out.writeFloat(close);
+        out.writeFloat(adjustedClose);
+        out.writeObject(date);
+        out.writeLong(volume);
+        out.writeString(percentChange);
+        out.writeString(absoluteChange);
+
+        //Colors
+        out.writeInt(color);
+        out.writeInt(darkColor);
+        out.writeInt(accentColor);
     }
 
     @Override
@@ -199,7 +220,30 @@ public class QuoteModel implements Parcelable {
         accentColor = in.readInt();
     }
 
-    public static final Parcelable.Creator<QuoteModel> CREATOR = new Parcelable.Creator<QuoteModel>() {
+    private QuoteModel(Model in) {
+        //Data
+        symbol = in.readString();
+        high = in.readFloat();
+        low = in.readFloat();
+        close = in.readFloat();
+        adjustedClose = in.readFloat();
+        date = in.readObject(Calendar.class);
+        volume = in.readLong();
+        percentChange = in.readString();
+        absoluteChange = in.readString();
+
+        //Colors
+        color = in.readInt();
+        darkColor = in.readInt();
+        accentColor = in.readInt();
+    }
+
+    public static final Modelable.Creator<QuoteModel> CREATOR = new Modelable.Creator<QuoteModel>() {
+        @Override
+        public QuoteModel createFromModel(Model in) {
+            return new QuoteModel(in);
+        }
+
         @Override
         public QuoteModel createFromParcel(Parcel in) {
             return new QuoteModel(in);

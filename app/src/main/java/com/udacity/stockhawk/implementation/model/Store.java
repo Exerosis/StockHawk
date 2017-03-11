@@ -1,8 +1,7 @@
 package com.udacity.stockhawk.implementation.model;
 
-import android.os.Parcel;
-
 import com.orhanobut.hawk.Hawk;
+import com.udacity.stockhawk.utilities.Model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +40,8 @@ public class Store {
             return stocks;
         stocks = new ArrayList<>();
         if (Hawk.contains(KEY_STOCKS))
-            for (Parcel parcel : Hawk.<ArrayList<Parcel>>get(KEY_STOCKS))
-                stocks.add(StockModel.CREATOR.createFromParcel(parcel));
+            for (Model model : Hawk.<ArrayList<Model>>get(KEY_STOCKS))
+                stocks.add(StockModel.CREATOR.createFromModel(model));
         subscribe();
         return stocks;
     }
@@ -77,18 +76,16 @@ public class Store {
 
     private static void subscribe() {
         refreshSubscription = REFRESH_OBSERVABLE.subscribe(tick -> {
-            for (StockModel stock : stocks) stock.refresh();
+            for (StockModel stock : stocks)
+                stock.refresh();
         });
         saveSubscription = SAVE_OBSERVABLE.subscribe(tick -> {
             if (stocks.isEmpty())
                 return;
-            List<Parcel> parcels = new ArrayList<>();
-            for (StockModel stock : stocks) {
-                Parcel parcel = Parcel.obtain();
-                stock.writeToParcel(parcel, 0);
-                parcels.add(parcel);
-            }
-            Hawk.put(KEY_STOCKS, parcels);
+            List<Model> models = new ArrayList<>();
+            for (StockModel stock : stocks)
+                models.add(Model.obtain(stock));
+            Hawk.put(KEY_STOCKS, models);
         });
     }
 

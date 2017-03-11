@@ -1,9 +1,11 @@
 package com.udacity.stockhawk.implementation.model;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.ColorRes;
 import android.support.annotation.NonNull;
+
+import com.udacity.stockhawk.utilities.Model;
+import com.udacity.stockhawk.utilities.Modelable;
 
 import java.util.List;
 
@@ -11,7 +13,7 @@ import static com.udacity.stockhawk.R.color.green_primary;
 import static com.udacity.stockhawk.R.color.grey_primary;
 import static com.udacity.stockhawk.R.color.red_primary;
 
-public class HistoryModel implements Parcelable {
+public class HistoryModel implements Modelable {
     @ColorRes
     private int color = 0, darkColor = 0, accentColor = 0;
     private List<QuoteModel> quotes;
@@ -49,10 +51,18 @@ public class HistoryModel implements Parcelable {
     }
 
 
-    //--Parcelable--
+    //--Modelable--
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    @Override
+    public void writeToModel(Model out) {
+        out.writeInt(color);
+        out.writeInt(darkColor);
+        out.writeInt(accentColor);
+        out.writeList(quotes);
     }
 
     @Override
@@ -70,7 +80,19 @@ public class HistoryModel implements Parcelable {
         quotes = in.createTypedArrayList(QuoteModel.CREATOR);
     }
 
-    public static final Parcelable.Creator<HistoryModel> CREATOR = new Parcelable.Creator<HistoryModel>() {
+    private HistoryModel(Model in) {
+        color = in.readInt();
+        darkColor = in.readInt();
+        accentColor = in.readInt();
+        quotes = in.readList(QuoteModel.CREATOR);
+    }
+
+    public static final Modelable.Creator<HistoryModel> CREATOR = new Modelable.Creator<HistoryModel>() {
+        @Override
+        public HistoryModel createFromModel(Model in) {
+            return new HistoryModel(in);
+        }
+
         @Override
         public HistoryModel createFromParcel(Parcel in) {
             return new HistoryModel(in);

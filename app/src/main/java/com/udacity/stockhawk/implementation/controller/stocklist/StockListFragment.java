@@ -43,7 +43,7 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog.setListener(this);
 
         Hawk.init(getContext()).build();
-       // Hawk.deleteAll();
+//        Hawk.deleteAll();
         setHasOptionsMenu(true);
 
         stocks = Store.getStocks();
