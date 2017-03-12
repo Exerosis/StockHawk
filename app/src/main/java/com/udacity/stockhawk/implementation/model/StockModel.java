@@ -14,20 +14,19 @@ import java.util.Map;
 import rx.Observable;
 import rx.subjects.BehaviorSubject;
 
-import static com.udacity.stockhawk.implementation.model.Network.getTransformer;
+import static com.udacity.stockhawk.utilities.Transformers.MAIN_THREAD;
 
 public class StockModel implements Modelable {
     private final BehaviorSubject<QuoteModel> quoteSubject;
     private final BehaviorSubject<Map<Period, HistoryModel>> historiesSubject;
 
     public static StockModel newInstance(@NonNull String symbol) throws IOException {
-        return new StockModel(Network.getQuote(symbol), Network.getHistories(symbol));
+        return new StockModel(Network.getQuote(symbol), new HashMap<>());
     }
 
     private StockModel(@NonNull QuoteModel quote, @NonNull Map<Period, HistoryModel> histories) {
         this.quoteSubject = BehaviorSubject.create(quote);
         this.historiesSubject = BehaviorSubject.create(histories);
-
     }
 
 
@@ -36,7 +35,7 @@ public class StockModel implements Modelable {
     }
 
     public Observable<QuoteModel> getQuoteSubject() {
-        return quoteSubject.compose(getTransformer());
+        return quoteSubject.compose(MAIN_THREAD());
     }
 
     public Map<Period, HistoryModel> getHistories() {
@@ -44,7 +43,7 @@ public class StockModel implements Modelable {
     }
 
     public Observable<Map<Period, HistoryModel>> getHistoriesSubject() {
-        return historiesSubject.compose(getTransformer());
+        return historiesSubject.compose(MAIN_THREAD());
     }
 
     public HistoryModel getHistory(Period period) {
@@ -52,7 +51,7 @@ public class StockModel implements Modelable {
     }
 
     public Observable<HistoryModel> getHistorySubject(Period period) {
-        return historiesSubject.filter(history -> history.containsKey(period)).map(history -> history.get(period)).compose(getTransformer());
+        return historiesSubject.filter(history -> history.containsKey(period)).map(history -> history.get(period)).compose(MAIN_THREAD());
     }
 
     public void refresh() {

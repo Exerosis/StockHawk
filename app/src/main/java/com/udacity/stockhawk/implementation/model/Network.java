@@ -10,9 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import rx.Observable;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
@@ -72,10 +69,5 @@ public class Network {
         Stock stock = YahooFinance.get(symbol);
         STOCKS.put(symbol, stock);
         return stock;
-    }
-
-
-    public static <T> Observable.Transformer<T, T> getTransformer() {
-        return observable -> observable.subscribeOn(Schedulers.io()).unsubscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
 }

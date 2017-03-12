@@ -3,6 +3,7 @@ package com.udacity.stockhawk.utilities;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,8 +21,12 @@ public class Model {
         return obtain(new JsonArray());
     }
 
+    public static Model obtain(String json) {
+        return obtain(new JsonParser().parse(json).getAsJsonArray());
+    }
+
     public static Model obtain(Modelable modelable) {
-        Model model = obtain();
+        Model model = new Model(new JsonArray());
         modelable.writeToModel(model);
         return model;
     }
@@ -85,7 +90,7 @@ public class Model {
     }
 
     public <T> T readObject(Class<T> type) {
-        return gson.fromJson(element(), type);
+        return gson.fromJson(element().getAsString(), type);
     }
 
     //Long
@@ -243,5 +248,11 @@ public class Model {
 
     public void setGson(Gson gson) {
         this.gson = gson;
+    }
+
+
+    @Override
+    public String toString() {
+        return gson.toJson(elements);
     }
 }

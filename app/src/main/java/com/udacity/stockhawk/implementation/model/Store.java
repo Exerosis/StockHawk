@@ -13,13 +13,15 @@ import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
+import static com.udacity.stockhawk.utilities.Transformers.IO_THREAD;
+
 public class Store {
     private static final String KEY_STOCKS = "STOCKS";
     private static final String KEY_DISPLAY_MODE = "DISPLAY_MODE";
     private static final PublishSubject<Long> SAVE_HOOK = PublishSubject.create();
     private static final PublishSubject<Long> REFRESH_HOOK = PublishSubject.create();
-    private static final Observable<Long> SAVE_OBSERVABLE = Observable.interval(30, TimeUnit.SECONDS).mergeWith(SAVE_HOOK).subscribeOn(Schedulers.io()).unsubscribeOn(Schedulers.io());
-    private static final Observable<Long> REFRESH_OBSERVABLE = Observable.interval(1, TimeUnit.MINUTES).mergeWith(REFRESH_HOOK).mergeWith(SAVE_HOOK).subscribeOn(Schedulers.io()).unsubscribeOn(Schedulers.io());
+    private static final Observable<Long> SAVE_OBSERVABLE = Observable.interval(2, TimeUnit.MINUTES).mergeWith(SAVE_HOOK).compose(IO_THREAD());
+    private static final Observable<Long> REFRESH_OBSERVABLE = Observable.interval(30, TimeUnit.MINUTES).mergeWith(REFRESH_HOOK).compose(IO_THREAD());
 
     private static List<StockModel> stocks;
     private static Subscription saveSubscription;
@@ -40,8 +42,8 @@ public class Store {
             return stocks;
         stocks = new ArrayList<>();
         if (Hawk.contains(KEY_STOCKS))
-            for (Model model : Hawk.<ArrayList<Model>>get(KEY_STOCKS))
-                stocks.add(StockModel.CREATOR.createFromModel(model));
+            for (String json : Hawk.<ArrayList<String>>get(KEY_STOCKS))
+                stocks.add(StockModel.CREATOR.createFromModel(Model.obtain(json)));
         subscribe();
         return stocks;
     }
@@ -53,6 +55,7 @@ public class Store {
             if (!stocks.isEmpty())
                 subscribe();
             save();
+            Schedulers.io().createWorker().schedule(stock::refresh);
             return stocks.indexOf(stock);
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
@@ -82,9 +85,9 @@ public class Store {
         saveSubscription = SAVE_OBSERVABLE.subscribe(tick -> {
             if (stocks.isEmpty())
                 return;
-            List<Model> models = new ArrayList<>();
+            List<String> models = new ArrayList<>();
             for (StockModel stock : stocks)
-                models.add(Model.obtain(stock));
+                models.add(Model.obtain(stock).toString());
             Hawk.put(KEY_STOCKS, models);
         });
     }

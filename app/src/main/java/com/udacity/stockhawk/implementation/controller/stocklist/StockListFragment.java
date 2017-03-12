@@ -43,7 +43,6 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog.setListener(this);
 
         Hawk.init(getContext()).build();
-//        Hawk.deleteAll();
         setHasOptionsMenu(true);
 
         stocks = Store.getStocks();
@@ -61,7 +60,6 @@ public class StockListFragment extends Fragment implements StockListController {
                 holder.setStock(stocks.get(position));
                 holder.setListener(StockListFragment.this);
                 view.hideStockError();
-                view.setRefreshing(false);
             }
 
             @Override
@@ -81,9 +79,8 @@ public class StockListFragment extends Fragment implements StockListController {
             Store.refresh();
             view.hideNetworkError();
         }
-        if (!stocks.isEmpty())
-            return;
-        view.showStockError();
+        if (stocks.isEmpty())
+            view.showStockError();
         view.setRefreshing(false);
     }
 

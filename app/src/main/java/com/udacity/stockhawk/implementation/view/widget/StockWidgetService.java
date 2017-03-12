@@ -1,4 +1,4 @@
-package com.udacity.stockhawk;
+package com.udacity.stockhawk.implementation.view.widget;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -10,6 +10,7 @@ import android.widget.RemoteViewsService;
 
 import com.robinhood.spark.SparkAdapter;
 import com.robinhood.spark.SparkView;
+import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.details.Period;
 import com.udacity.stockhawk.implementation.model.HistoryModel;
 import com.udacity.stockhawk.implementation.model.QuoteModel;
