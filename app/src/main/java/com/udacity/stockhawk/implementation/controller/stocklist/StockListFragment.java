@@ -16,7 +16,7 @@ import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.addstock.AddStockDialog;
 import com.udacity.stockhawk.implementation.controller.details.container.StockDetailsContainerActivity;
 import com.udacity.stockhawk.implementation.model.StockModel;
-import com.udacity.stockhawk.implementation.model.Store;
+import com.udacity.stockhawk.implementation.model.fetchers.Store;
 import com.udacity.stockhawk.implementation.view.stocklist.StockList;
 import com.udacity.stockhawk.implementation.view.stocklist.StockListView;
 import com.udacity.stockhawk.implementation.view.stocklist.holder.StockViewHolder;

@@ -8,7 +8,11 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.udacity.stockhawk.R;
+import com.udacity.stockhawk.implementation.controller.details.container.StockDetailsContainerActivity;
 import com.udacity.stockhawk.implementation.view.widget.StockWidgetService;
+
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+import static android.app.PendingIntent.getActivity;
 
 public class StockWidget extends AppWidgetProvider {
 
@@ -19,6 +23,8 @@ public class StockWidget extends AppWidgetProvider {
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.stock_widget);
             Intent intent = new Intent(context, StockWidgetService.class);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id);
+
+            views.setPendingIntentTemplate(R.id.stock_widget_list, getActivity(context, 0, new Intent(context, StockDetailsContainerActivity.class), FLAG_UPDATE_CURRENT));
             views.setRemoteAdapter(R.id.stock_widget_list, intent);
             manager.updateAppWidget(id, views);
         }

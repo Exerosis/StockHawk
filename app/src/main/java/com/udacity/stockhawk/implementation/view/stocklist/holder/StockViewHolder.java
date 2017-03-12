@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewStub;
 import android.widget.TextView;
 
 import com.robinhood.spark.SparkAdapter;
@@ -27,7 +28,8 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     @BindView(R.id.stock_holder_change)
     protected TextView change;
     @BindView(R.id.stock_holder_chart)
-    protected SparkView chart;
+    protected ViewStub stub;
+    private SparkView chart;
 
     private Subscription historySubscription;
     private Subscription quoteSubscription;
@@ -38,8 +40,10 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     public StockViewHolder(ViewGroup container) {
         super(LayoutInflater.from(container.getContext()).inflate(R.layout.stock_view_holder, container, false));
         ButterKnife.bind(this, getRoot());
+        stub.setLayoutResource(R.layout.spark_chart_layout);
+        chart = (SparkView) stub.inflate();
 
-        chart.setCornerRadius(80);
+        chart.setCornerRadius(30);
 
         chart.setAdapter(new SparkAdapter() {
             @Override

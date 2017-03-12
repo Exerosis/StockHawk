@@ -1,8 +1,10 @@
-package com.udacity.stockhawk.implementation.model;
+package com.udacity.stockhawk.implementation.model.fetchers;
 
 import com.orhanobut.hawk.Hawk;
+import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.utilities.Model;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -44,7 +46,9 @@ public class Store {
         if (Hawk.contains(KEY_STOCKS))
             for (String json : Hawk.<ArrayList<String>>get(KEY_STOCKS))
                 stocks.add(StockModel.CREATOR.createFromModel(Model.obtain(json)));
-        subscribe();
+        if (!stocks.isEmpty())
+            subscribe();
+        refresh();
         return stocks;
     }
 
@@ -55,7 +59,6 @@ public class Store {
             if (!stocks.isEmpty())
                 subscribe();
             save();
-            Schedulers.io().createWorker().schedule(stock::refresh);
             return stocks.indexOf(stock);
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
     }
@@ -80,14 +83,24 @@ public class Store {
     private static void subscribe() {
         refreshSubscription = REFRESH_OBSERVABLE.subscribe(tick -> {
             for (StockModel stock : stocks)
-                stock.refresh();
+                try {
+                    stock.refresh();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         });
         saveSubscription = SAVE_OBSERVABLE.subscribe(tick -> {
             if (stocks.isEmpty())
                 return;
             List<String> models = new ArrayList<>();
-            for (StockModel stock : stocks)
+            for (StockModel stock : stocks) {
+                try {
+                    stock.refresh();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 models.add(Model.obtain(stock).toString());
+            }
             Hawk.put(KEY_STOCKS, models);
         });
     }

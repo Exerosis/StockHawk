@@ -3,6 +3,7 @@ package com.udacity.stockhawk.implementation.model;
 import android.os.Parcel;
 import android.support.annotation.ColorRes;
 
+import com.udacity.stockhawk.implementation.model.fetchers.Store;
 import com.udacity.stockhawk.utilities.Model;
 import com.udacity.stockhawk.utilities.Modelable;
 
@@ -97,7 +98,7 @@ public class QuoteModel implements Modelable {
     }
 
     public String getChange() {
-        return com.udacity.stockhawk.implementation.model.Store.getDisplayMode() ? percentChange : absoluteChange;
+        return Store.getDisplayMode() ? percentChange : absoluteChange;
     }
 
     public String getAbsoluteChange() {

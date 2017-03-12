@@ -1,11 +1,11 @@
-package com.udacity.stockhawk.implementation.model;
+package com.udacity.stockhawk.implementation.model.fetchers;
 
 import com.udacity.stockhawk.implementation.controller.details.Period;
+import com.udacity.stockhawk.implementation.model.QuoteModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,14 +22,7 @@ public class Network {
         return new QuoteModel(getStock(symbol).getQuote(true));
     }
 
-    public static Map<Period, HistoryModel> getHistories(String symbol) throws IOException {
-        Map<Period, HistoryModel> histories = new HashMap<>();
-        for (Period period : Period.values())
-            histories.put(period, getHistory(symbol, period));
-        return histories;
-    }
-
-    public static HistoryModel getHistory(String symbol, Period period) throws IOException {
+    public static List<QuoteModel> getHistory(QuoteModel quote, Period period) throws IOException {
         Calendar from = Calendar.getInstance();
         Interval interval;
         switch (period) {
@@ -56,11 +49,10 @@ public class Network {
         }
 
         List<QuoteModel> quotes = new ArrayList<>();
-        for (HistoricalQuote historicalQuote : getStock(symbol).getHistory(from, interval))
-            quotes.add(new QuoteModel(historicalQuote));
-        Collections.reverse(quotes);
-        quotes.add(getQuote(symbol));
-        return new HistoryModel(quotes);
+        for (HistoricalQuote historicalQuote : getStock(quote.getSymbol()).getHistory(from, interval))
+            quotes.add(0, new QuoteModel(historicalQuote));
+        quotes.add(quote);
+        return quotes;
     }
 
     public static Stock getStock(String symbol) throws IOException {

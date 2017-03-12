@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import com.udacity.stockhawk.utilities.Model;
 import com.udacity.stockhawk.utilities.Modelable;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.udacity.stockhawk.R.color.green_primary;
@@ -17,6 +18,10 @@ public class HistoryModel implements Modelable {
     @ColorRes
     private int color = 0, darkColor = 0, accentColor = 0;
     private List<QuoteModel> quotes;
+
+    public HistoryModel() {
+        this(new ArrayList<>());
+    }
 
     public HistoryModel(@NonNull List<QuoteModel> quotes) {
         this.quotes = quotes;

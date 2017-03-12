@@ -4,11 +4,14 @@ import android.os.Parcel;
 import android.support.annotation.NonNull;
 
 import com.udacity.stockhawk.implementation.controller.details.Period;
+import com.udacity.stockhawk.implementation.model.fetchers.Network;
+import com.udacity.stockhawk.implementation.model.fetchers.Store;
 import com.udacity.stockhawk.utilities.Model;
 import com.udacity.stockhawk.utilities.Modelable;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import rx.Observable;
@@ -21,14 +24,20 @@ public class StockModel implements Modelable {
     private final BehaviorSubject<Map<Period, HistoryModel>> historiesSubject;
 
     public static StockModel newInstance(@NonNull String symbol) throws IOException {
-        return new StockModel(Network.getQuote(symbol), new HashMap<>());
+        QuoteModel quote = Network.getQuote(symbol);
+
+        Map<Period, HistoryModel> histories = new HashMap<>(4);
+        histories.put(Period.MONTH, new HistoryModel(Network.getHistory(quote, Period.MONTH)));
+        histories.put(Period.SIX_MONTH, new HistoryModel());
+        histories.put(Period.YEAR, new HistoryModel());
+        histories.put(Period.WEEK, new HistoryModel());
+        return new StockModel(quote, histories);
     }
 
     private StockModel(@NonNull QuoteModel quote, @NonNull Map<Period, HistoryModel> histories) {
         this.quoteSubject = BehaviorSubject.create(quote);
         this.historiesSubject = BehaviorSubject.create(histories);
     }
-
 
     public QuoteModel getQuote() {
         return quoteSubject.getValue();
@@ -54,15 +63,15 @@ public class StockModel implements Modelable {
         return historiesSubject.filter(history -> history.containsKey(period)).map(history -> history.get(period)).compose(MAIN_THREAD());
     }
 
-    public void refresh() {
-        try {
-            QuoteModel quote = Network.getQuote(getQuote().getSymbol());
-            quoteSubject.onNext(quote);
-            for (HistoryModel history : historiesSubject.getValue().values())
-                history.getQuotes().set(history.getQuotes().size() - 1, quote);
-            historiesSubject.onNext(historiesSubject.getValue());
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void refresh() throws IOException {
+        QuoteModel quote = Network.getQuote(getQuote().getSymbol());
+        quoteSubject.onNext(quote);
+        for (Period period : Period.values()) {
+            List<QuoteModel> quotes = historiesSubject.getValue().get(period).getQuotes();
+            if (quotes.isEmpty())
+                quotes.addAll(Network.getHistory(quote, period));
+            else
+                quotes.set(quotes.size() - 1, quote);
         }
     }
 
