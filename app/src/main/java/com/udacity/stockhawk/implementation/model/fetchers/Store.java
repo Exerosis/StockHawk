@@ -56,8 +56,8 @@ public class Store {
         return Observable.fromCallable(() -> {
             StockModel stock = StockModel.newInstance(symbol);
             stocks.add(stock);
-            if (!stocks.isEmpty())
-                subscribe();
+            subscribe();
+            refresh();
             save();
             return stocks.indexOf(stock);
         }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
@@ -93,14 +93,8 @@ public class Store {
             if (stocks.isEmpty())
                 return;
             List<String> models = new ArrayList<>();
-            for (StockModel stock : stocks) {
-                try {
-                    stock.refresh();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            for (StockModel stock : stocks)
                 models.add(Model.obtain(stock).toString());
-            }
             Hawk.put(KEY_STOCKS, models);
         });
     }
