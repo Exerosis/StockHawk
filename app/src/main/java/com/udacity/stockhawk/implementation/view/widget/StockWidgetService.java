@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
@@ -20,6 +21,8 @@ import com.udacity.stockhawk.implementation.model.fetchers.Store;
 
 import java.util.List;
 
+import static android.util.TypedValue.COMPLEX_UNIT_DIP;
+import static android.util.TypedValue.applyDimension;
 import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_STOCK;
 
 public class StockWidgetService extends RemoteViewsService {
@@ -31,7 +34,7 @@ public class StockWidgetService extends RemoteViewsService {
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
         Log.i("TEST", "onGetViewFactory");
 
-        chart = new SparkView(this);
+        chart = (SparkView) LayoutInflater.from(this).inflate(R.layout.spark_chart_layout, null);
         chart.setCornerRadius(80);
         chart.setAdapter(new SparkAdapter() {
             @Override
@@ -92,10 +95,10 @@ public class StockWidgetService extends RemoteViewsService {
                 history = stock.getHistory(Period.MONTH);
                 chart.getAdapter().notifyDataSetChanged();
 
-                //TODO find the correct values to frame this view :|
-                int width = 0;
-                int height = 0;
-                // view.setImageViewBitmap(R.id.image_chart_view, getBitmapFromView(chart, width, height));
+                int width = (int) applyDimension(COMPLEX_UNIT_DIP, getResources().getDimension(R.dimen.chart_width), getResources().getDisplayMetrics());
+                int height = (int) applyDimension(COMPLEX_UNIT_DIP, 48, getResources().getDisplayMetrics());
+                chart.layout(0, 0, width, height);
+                view.setImageViewBitmap(R.id.image_chart_view, getViewBitmap(chart));
                 return view;
             }
 
@@ -121,12 +124,18 @@ public class StockWidgetService extends RemoteViewsService {
         };
     }
 
-    public static Bitmap getBitmapFromView(View view, int width, int height) {
-        view.measure(View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY));
+    public static Bitmap getViewBitmap(View view) {
+        int width = view.getWidth();
+        int height = view.getHeight();
+
+        int measuredWidth = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY);
+        int measuredHeight = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY);
+
+        view.measure(measuredWidth, measuredHeight);
         view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
-        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.RGB_565);
+
+        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
-        canvas.translate(-view.getScrollX(), -view.getScrollY());
         view.draw(canvas);
         return bitmap;
     }

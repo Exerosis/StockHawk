@@ -5,6 +5,21 @@
     android:layout_height="match_parent"
     android:theme="@style/AppTheme.Blue">
 
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/stock_details_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:minHeight="?attr/actionBarSize"
+            app:titleTextColor="@android:color/white" />
+
+    </android.support.design.widget.AppBarLayout>
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -26,8 +41,11 @@
             <android.support.design.widget.TabLayout
                 android:id="@+id/stock_details_tabs"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true">
+                android:layout_height="48dp"
+                android:layout_alignParentBottom="true"
+                app:tabIndicatorColor="@color/grey_primary"
+                app:tabSelectedTextColor="@color/grey_primary_dark"
+                app:tabTextColor="@color/grey_primary">
 
                 <android.support.design.widget.TabItem
                     android:layout_width="match_parent"
@@ -63,26 +81,11 @@
                 android:id="@+id/stock_details_chart"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_above="@id/stock_details_tabs"
+                android:layout_above="@+id/stock_details_tabs"
                 android:layout_below="@id/stock_details_symbol"
                 android:background="?attr/colorBackgroundFloating"
                 app:spark_scrubEnabled="false" />
         </RelativeLayout>
     </FrameLayout>
-
-
-    <android.support.design.widget.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <android.support.v7.widget.Toolbar
-            android:id="@+id/stock_details_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorPrimary"
-            android:minHeight="?attr/actionBarSize"
-            app:titleTextColor="@android:color/white" />
-
-    </android.support.design.widget.AppBarLayout>
 
 </android.support.design.widget.CoordinatorLayout>

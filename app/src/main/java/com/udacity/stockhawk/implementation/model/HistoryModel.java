@@ -25,15 +25,18 @@ public class HistoryModel implements Modelable {
 
     public HistoryModel(@NonNull List<QuoteModel> quotes) {
         this.quotes = quotes;
+        refresh();
+    }
 
-        float first = 0, last = 0;
+    public void refresh() {
+        float last = 0, first = 0;
         if (quotes.size() > 1) {
-            first = quotes.get(0).getOpen();
-            last = quotes.get(quotes.size() - 1).getAdjustedClose();
+            last = quotes.get(0).getOpen();
+            first = quotes.get(quotes.size() - 1).getAdjustedClose();
         }
-        color = first > last ? green_primary : first < last ? red_primary : grey_primary;
-        darkColor = first > last ? green_primary : first < last ? red_primary : grey_primary;
-        accentColor = first > last ? green_primary : first < last ? red_primary : grey_primary;
+        color = last > first ? red_primary : last < first ? green_primary : grey_primary;
+        darkColor = last > first ? red_primary : last < first ? green_primary : grey_primary;
+        accentColor = last > first ? red_primary : last < first ? green_primary : grey_primary;
     }
 
     public List<QuoteModel> getQuotes() {

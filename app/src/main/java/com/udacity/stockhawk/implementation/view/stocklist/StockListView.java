@@ -156,7 +156,12 @@ public class StockListView implements StockList {
     }
 
     @Override
-    public Bundle getViewState() {
-        return null;
+    public void saveState(Bundle out) {
+
+    }
+
+    @Override
+    public void loadState(Bundle in) {
+
     }
 }

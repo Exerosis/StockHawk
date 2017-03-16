@@ -3,32 +3,32 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/stock_holder_layout"
     android:layout_width="match_parent"
-    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:layout_height="?attr/listPreferredItemHeight"
     android:orientation="horizontal"
-    android:weightSum="6">
+    android:weightSum="3">
 
     <TextView
         android:id="@+id/stock_holder_symbol"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="2"
-        android:gravity="center_vertical"
-        android:paddingEnd="16dp"
-        android:paddingStart="16dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:paddingEnd="0dp"
+        android:paddingStart="8dp"
         android:textAppearance="@android:style/TextAppearance.Material.Large"
         tools:text="NVDA" />
 
     <ViewStub
         android:id="@+id/stock_holder_chart"
-        android:layout_width="200dp"
+        android:layout_width="@dimen/chart_width"
         android:layout_height="match_parent"
-        android:layout_weight="2"
-        android:layout="@layout/image_chart_layout"
-        android:padding="8dp" />
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:layout="@layout/image_chart_layout" />
 
     <TextView
         android:id="@+id/stock_holder_price"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:gravity="center"
@@ -37,7 +37,7 @@
 
     <TextView
         android:id="@+id/stock_holder_change"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@color/grey_primary"

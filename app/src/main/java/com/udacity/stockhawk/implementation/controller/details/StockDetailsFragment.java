@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 
 import com.robinhood.spark.SparkAdapter;
 import com.udacity.stockhawk.implementation.model.HistoryModel;
+import com.udacity.stockhawk.implementation.model.QuoteModel;
 import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.implementation.view.details.StockDetails;
 import com.udacity.stockhawk.implementation.view.details.StockDetailsView;
@@ -16,11 +17,14 @@ import com.udacity.stockhawk.implementation.view.details.StockDetailsView;
 import java.util.HashMap;
 import java.util.Map;
 
+import rx.Subscription;
+
 public class StockDetailsFragment extends Fragment implements StockDetailsController {
     public static final String ARGS_STOCK = "STOCK";
     private Map<Period, HistoryModel> histories = new HashMap<>();
     private StockDetails view;
     private Period period = Period.MONTH;
+    private Subscription subscription;
 
     public static StockDetailsFragment newInstance(Bundle args) {
         StockDetailsFragment fragment = new StockDetailsFragment();
@@ -35,7 +39,7 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle in) {
         view = new StockDetailsView(inflater, container, (AppCompatActivity) getActivity());
         view.setListener(this);
 
@@ -52,17 +56,31 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
 
             @Override
             public float getY(int index) {
-                return histories.get(period).getQuotes().get(index).getAdjustedClose();
+                return ((QuoteModel) getItem(index)).getAdjustedClose();
             }
         });
 
+        view.loadState(in);
+
         StockModel stock = getArguments().getParcelable(ARGS_STOCK);
         if (stock != null)
-            stock.getHistoriesSubject().subscribe(histories -> {
+            subscription = stock.getHistoriesSubject().subscribe(histories -> {
                 this.histories = histories;
                 refresh();
             });
         return view.getRoot();
+    }
+
+    @Override
+    public void onDestroy() {
+        subscription.unsubscribe();
+        super.onDestroy();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle out) {
+        view.saveState(out);
+        super.onSaveInstanceState(out);
     }
 
     @Override

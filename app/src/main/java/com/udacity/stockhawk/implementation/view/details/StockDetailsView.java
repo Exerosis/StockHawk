@@ -21,8 +21,10 @@ import butterknife.BindColor;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+@SuppressWarnings("ConstantConditions")
 public class StockDetailsView implements StockDetails {
     private static final long DURATION_FADE = 500;
+    private static final String STATE_SELECTED_TAB = "SELECTED_TAB";
     private final View view;
     private final AppCompatActivity activity;
 
@@ -48,7 +50,9 @@ public class StockDetailsView implements StockDetails {
 
         activity.setSupportActionBar(toolbar);
 
-        chart.setCornerRadius(80);
+        chart.setCornerRadius(40);
+
+        tabs.getTabAt(1).select();
 
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -99,6 +103,18 @@ public class StockDetailsView implements StockDetails {
         darkColorAnimator.start();
     }
 
+
+    @Override
+    public void saveState(Bundle out) {
+        out.putInt(STATE_SELECTED_TAB, tabs.getSelectedTabPosition());
+    }
+
+    @Override
+    public void loadState(Bundle in) {
+        if (in != null)
+            tabs.getTabAt(in.getInt(STATE_SELECTED_TAB)).select();
+    }
+
     @Override
     public SparkAdapter getAdapter() {
         return chart.getAdapter();
@@ -122,10 +138,5 @@ public class StockDetailsView implements StockDetails {
     @Override
     public View getRoot() {
         return view;
-    }
-
-    @Override
-    public Bundle getViewState() {
-        return null;
     }
 }

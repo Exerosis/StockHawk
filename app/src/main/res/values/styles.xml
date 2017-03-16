@@ -48,6 +48,5 @@
 
     <style name="MySparkViewStyle" parent="@style/spark_SparkView">
         <item name="spark_animateChanges">false</item>
-        <item name="spark_cornerRadius">30dp</item>
     </style>
 </resources>

@@ -66,13 +66,17 @@ public class StockModel implements Modelable {
     public void refresh() throws IOException {
         QuoteModel quote = Network.getQuote(getQuote().getSymbol());
         quoteSubject.onNext(quote);
+
+        Map<Period, HistoryModel> histories = historiesSubject.getValue();
         for (Period period : Period.values()) {
-            List<QuoteModel> quotes = historiesSubject.getValue().get(period).getQuotes();
+            List<QuoteModel> quotes = histories.get(period).getQuotes();
             if (quotes.isEmpty())
                 quotes.addAll(Network.getHistory(quote, period));
-            else
-                quotes.set(quotes.size() - 1, quote);
+//            else
+//                quotes.set(0, quote);
+            histories.get(period).refresh();
         }
+        historiesSubject.onNext(histories);
     }
 
     //--Modelable

@@ -102,6 +102,16 @@ public class Model {
         return element().getAsLong();
     }
 
+    //Boolean
+
+    public void writeBoolean(boolean bool) {
+        elements.add(bool);
+    }
+
+    public boolean readBoolean() {
+        return element().getAsBoolean();
+    }
+
     //--List--
     public void writeList(List<?> list) {
         writeInt(list.size());

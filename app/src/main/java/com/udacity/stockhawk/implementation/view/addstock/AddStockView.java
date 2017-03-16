@@ -2,16 +2,13 @@ package com.udacity.stockhawk.implementation.view.addstock;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.udacity.stockhawk.R;
 
@@ -33,15 +30,9 @@ public class AddStockView implements AddStock {
     @BindString(R.string.add_stock_cancel)
     protected String cancel;
 
-    public AddStockView(LayoutInflater inflater, Bundle state) {
+    public AddStockView(LayoutInflater inflater) {
         view = inflater.inflate(R.layout.add_stock_view, null);
         ButterKnife.bind(this, view);
-        if (state != null)
-            input.setText(state.getString(STATE_INPUT));
-    }
-
-    public AddStockView(LayoutInflater inflater) {
-        this(inflater, null);
     }
 
     @Override
@@ -49,28 +40,19 @@ public class AddStockView implements AddStock {
         AlertDialog.Builder builder = new AlertDialog.Builder(getRoot().getContext());
         builder.setView(getRoot());
 
-        input.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView view, int id, KeyEvent event) {
-                if (listener != null)
-                    listener.onAdd(input.getText().toString());
-                return true;
-            }
+        input.setOnEditorActionListener((view1, id, event) -> {
+            if (listener != null)
+                listener.onAdd(input.getText().toString());
+            return true;
         });
         builder.setMessage(text);
-        builder.setPositiveButton(add, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int id) {
-                if (listener != null)
-                    listener.onAdd(input.getText().toString());
-            }
+        builder.setPositiveButton(add, (dialog, id) -> {
+            if (listener != null)
+                listener.onAdd(input.getText().toString());
         });
-        builder.setNegativeButton(cancel, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int id) {
-                if (listener != null)
-                    listener.onCancel();
-            }
+        builder.setNegativeButton(cancel, (dialog, id) -> {
+            if (listener != null)
+                listener.onCancel();
         });
         Dialog dialog = builder.create();
 
@@ -103,9 +85,12 @@ public class AddStockView implements AddStock {
     }
 
     @Override
-    public Bundle getViewState() {
-        Bundle bundle = new Bundle();
-        bundle.putString(STATE_INPUT, input.getText().toString());
-        return bundle;
+    public void saveState(Bundle out) {
+        out.putString(STATE_INPUT, input.getText().toString());
+    }
+
+    @Override
+    public void loadState(Bundle in) {
+        input.setText(in.getString(STATE_INPUT));
     }
 }

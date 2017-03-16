@@ -43,8 +43,6 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
         stub.setLayoutResource(R.layout.spark_chart_layout);
         chart = (SparkView) stub.inflate();
 
-        chart.setCornerRadius(30);
-
         chart.setAdapter(new SparkAdapter() {
             @Override
             public int getCount() {
@@ -58,8 +56,6 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
 
             @Override
             public float getY(int index) {
-                if (index == 0)
-                    return history.getQuotes().get(index).getOpen();
                 return history.getQuotes().get(index).getAdjustedClose();
             }
         });
@@ -113,7 +109,12 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     }
 
     @Override
-    public Bundle getViewState() {
-        return null;
+    public void saveState(Bundle out) {
+
+    }
+
+    @Override
+    public void loadState(Bundle in) {
+
     }
 }

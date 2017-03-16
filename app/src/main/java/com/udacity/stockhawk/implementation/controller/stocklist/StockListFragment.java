@@ -121,10 +121,9 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog.show(getFragmentManager(), "AddStockDialog");
     }
 
-
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.main_activity_settings, menu);
+        inflater.inflate(R.menu.main_stock_list, menu);
         MenuItem item = menu.findItem(R.id.action_change_units);
         item.setIcon(Store.getDisplayMode() ? R.drawable.ic_percentage : R.drawable.ic_dollar);
     }

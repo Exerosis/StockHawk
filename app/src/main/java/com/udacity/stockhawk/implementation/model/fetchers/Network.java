@@ -6,6 +6,7 @@ import com.udacity.stockhawk.implementation.model.QuoteModel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,9 +50,10 @@ public class Network {
         }
 
         List<QuoteModel> quotes = new ArrayList<>();
+//        quotes.add(quote);
         for (HistoricalQuote historicalQuote : getStock(quote.getSymbol()).getHistory(from, interval))
-            quotes.add(0, new QuoteModel(historicalQuote));
-        quotes.add(quote);
+            quotes.add(new QuoteModel(historicalQuote));
+        Collections.reverse(quotes);
         return quotes;
     }
 
