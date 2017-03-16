@@ -4,8 +4,8 @@ import com.orhanobut.hawk.Hawk;
 import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.utilities.Model;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +42,7 @@ public class Store {
     public static List<StockModel> getStocks() {
         if (stocks != null)
             return stocks;
-        stocks = new ArrayList<>();
+        stocks = Collections.synchronizedList(new ArrayList<>());
         if (Hawk.contains(KEY_STOCKS))
             for (String json : Hawk.<ArrayList<String>>get(KEY_STOCKS))
                 stocks.add(StockModel.CREATOR.createFromModel(Model.obtain(json)));
@@ -54,6 +54,9 @@ public class Store {
 
     public static Observable<Integer> addStock(String symbol) {
         return Observable.fromCallable(() -> {
+            for (StockModel stock : stocks)
+                if (stock.getQuote().getSymbol().equals(symbol))
+                    throw new IllegalArgumentException("Stock already added!");
             StockModel stock = StockModel.newInstance(symbol);
             stocks.add(stock);
             subscribe();
@@ -85,7 +88,7 @@ public class Store {
             for (StockModel stock : stocks)
                 try {
                     stock.refresh();
-                } catch (IOException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
         });

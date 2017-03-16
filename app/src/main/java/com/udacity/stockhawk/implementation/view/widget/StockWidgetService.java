@@ -23,6 +23,7 @@ import java.util.List;
 
 import static android.util.TypedValue.COMPLEX_UNIT_DIP;
 import static android.util.TypedValue.applyDimension;
+import static android.view.View.VISIBLE;
 import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_STOCK;
 
 public class StockWidgetService extends RemoteViewsService {
@@ -83,8 +84,9 @@ public class StockWidgetService extends RemoteViewsService {
             public RemoteViews getViewAt(int index) {
                 RemoteViews view = new RemoteViews(StockWidgetService.this.getPackageName(), R.layout.stock_view_holder);
                 StockModel stock = stocks.get(index);
-
                 QuoteModel quote = stock.getQuote();
+
+                view.setViewVisibility(R.id.stock_holder_chart, VISIBLE);
                 view.setTextViewText(R.id.stock_holder_price, String.valueOf(quote.getPrice()));
                 view.setTextViewText(R.id.stock_holder_symbol, quote.getSymbol());
                 view.setTextViewText(R.id.stock_holder_change, quote.getChange());
@@ -98,7 +100,7 @@ public class StockWidgetService extends RemoteViewsService {
                 int width = (int) applyDimension(COMPLEX_UNIT_DIP, getResources().getDimension(R.dimen.chart_width), getResources().getDisplayMetrics());
                 int height = (int) applyDimension(COMPLEX_UNIT_DIP, 48, getResources().getDisplayMetrics());
                 chart.layout(0, 0, width, height);
-                view.setImageViewBitmap(R.id.image_chart_view, getViewBitmap(chart));
+                view.setImageViewBitmap(R.id.stock_holder_chart, getViewBitmap(chart));
                 return view;
             }
 

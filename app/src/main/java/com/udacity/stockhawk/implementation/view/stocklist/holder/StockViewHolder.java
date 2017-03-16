@@ -40,6 +40,7 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     public StockViewHolder(ViewGroup container) {
         super(LayoutInflater.from(container.getContext()).inflate(R.layout.stock_view_holder, container, false));
         ButterKnife.bind(this, getRoot());
+        
         stub.setLayoutResource(R.layout.spark_chart_layout);
         chart = (SparkView) stub.inflate();
 

@@ -58,7 +58,7 @@ public class StockDetailsView implements StockDetails {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 if (listener != null)
-                    listener.onChangePeriod(Period.valueOf(String.valueOf(tab.getText()).replace(" ", "_").toUpperCase()));
+                    listener.onChangePeriod(Period.values()[tab.getPosition()]);
             }
 
             @Override

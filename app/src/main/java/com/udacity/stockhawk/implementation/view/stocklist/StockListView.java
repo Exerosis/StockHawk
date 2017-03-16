@@ -9,8 +9,10 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,6 +35,8 @@ public class StockListView implements StockList {
     private final Paint paint = new Paint();
     private StockListListener listener;
 
+    @BindView(R.id.stock_list_toolbar)
+    protected Toolbar toolbar;
     @BindView(R.id.stock_list_recycler_view)
     protected RecyclerView recyclerView;
     @BindView(R.id.stock_list_refresh_layout)
@@ -51,9 +55,11 @@ public class StockListView implements StockList {
     @BindBitmap(R.drawable.ic_delete)
     protected Bitmap deleteIcon;
 
-    public StockListView(LayoutInflater inflater, ViewGroup container) {
+    public StockListView(LayoutInflater inflater, ViewGroup container, AppCompatActivity activity) {
         view = inflater.inflate(R.layout.stock_list_view, container, false);
         ButterKnife.bind(this, view);
+
+        activity.setSupportActionBar(toolbar);
 
         paint.setColor(red);
 
@@ -99,8 +105,8 @@ public class StockListView implements StockList {
                 listener.onAddClicked();
         });
 
-        networkError = Snackbar.make(container, networkErrorMessage, Snackbar.LENGTH_INDEFINITE);
-        stockError = Snackbar.make(container, stockErrorMessage, Snackbar.LENGTH_INDEFINITE);
+        networkError = Snackbar.make(fab, networkErrorMessage, Snackbar.LENGTH_INDEFINITE);
+        stockError = Snackbar.make(fab, stockErrorMessage, Snackbar.LENGTH_INDEFINITE);
     }
 
     @Override

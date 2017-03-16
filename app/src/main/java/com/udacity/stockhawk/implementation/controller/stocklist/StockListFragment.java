@@ -3,6 +3,7 @@ package com.udacity.stockhawk.implementation.controller.stocklist;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,10 +24,13 @@ import com.udacity.stockhawk.implementation.view.stocklist.holder.StockViewHolde
 import com.udacity.stockhawk.utilities.NetworkUtilities;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
+import static com.udacity.stockhawk.R.string.dialog_duplicate_stock;
 import static com.udacity.stockhawk.R.string.dialog_error_blank;
 import static com.udacity.stockhawk.R.string.dialog_error_network;
 import static com.udacity.stockhawk.R.string.dialog_error_unexpected;
+import static com.udacity.stockhawk.R.string.dialog_invalid_stock;
 import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_STOCK;
 
 public class StockListFragment extends Fragment implements StockListController {
@@ -37,7 +41,7 @@ public class StockListFragment extends Fragment implements StockListController {
     @SuppressWarnings("unchecked")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        view = new StockListView(inflater, container);
+        view = new StockListView(inflater, container, (AppCompatActivity) getActivity());
         view.setListener(this);
         dialog = new AddStockDialog();
         dialog.setListener(this);
@@ -103,7 +107,14 @@ public class StockListFragment extends Fragment implements StockListController {
                 view.hideNetworkError();
                 view.hideStockError();
                 dialog.dismissAllowingStateLoss();
-            }, throwable -> dialog.showError(dialog_error_unexpected));
+            }, throwable -> {
+                if (throwable instanceof IllegalArgumentException)
+                    dialog.showError(dialog_duplicate_stock);
+                else if (throwable instanceof NoSuchElementException)
+                    dialog.showError(dialog_invalid_stock);
+                else
+                    dialog.showError(dialog_error_unexpected);
+            });
     }
 
     @Override

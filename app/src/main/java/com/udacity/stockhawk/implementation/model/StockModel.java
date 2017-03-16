@@ -9,7 +9,6 @@ import com.udacity.stockhawk.implementation.model.fetchers.Store;
 import com.udacity.stockhawk.utilities.Model;
 import com.udacity.stockhawk.utilities.Modelable;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,7 @@ public class StockModel implements Modelable {
     private final BehaviorSubject<QuoteModel> quoteSubject;
     private final BehaviorSubject<Map<Period, HistoryModel>> historiesSubject;
 
-    public static StockModel newInstance(@NonNull String symbol) throws IOException {
+    public static StockModel newInstance(@NonNull String symbol) throws Exception {
         QuoteModel quote = Network.getQuote(symbol);
 
         Map<Period, HistoryModel> histories = new HashMap<>(4);
@@ -63,7 +62,7 @@ public class StockModel implements Modelable {
         return historiesSubject.filter(history -> history.containsKey(period)).map(history -> history.get(period)).compose(MAIN_THREAD());
     }
 
-    public void refresh() throws IOException {
+    public void refresh() throws Exception {
         QuoteModel quote = Network.getQuote(getQuote().getSymbol());
         quoteSubject.onNext(quote);
 

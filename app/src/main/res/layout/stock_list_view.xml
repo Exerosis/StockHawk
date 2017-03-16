@@ -38,7 +38,7 @@
         android:layout_height="wrap_content">
 
         <android.support.v7.widget.Toolbar
-            android:id="@+id/stock_details_toolbar"
+            android:id="@+id/stock_list_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
@@ -54,7 +54,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="8dp"
         android:clickable="true"
-        app:fabSize="normal"
         app:srcCompat="@drawable/fab_plus" />
 
 </android.support.design.widget.CoordinatorLayout>

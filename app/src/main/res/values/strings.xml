@@ -14,7 +14,15 @@
     <string name="dialog_error_network">No network connection!</string>
     <string name="dialog_error_blank">Symbol cannot be blank!</string>
     <string name="dialog_error_unexpected">Unexpected error!</string>
+    <string name="dialog_invalid_stock">Not a valid stock symbol!</string>
+    <string name="dialog_duplicate_stock">Stock already present!</string>
 
     <string name="add_description">Add</string>
     <string name="add_widget">Add widget</string>
+    <string name="description_stock_chart">Stock Chart</string>
+
+    <string name="tab_week">Week</string>
+    <string name="tab_month">Month</string>
+    <string name="tab_six_month">Six Month</string>
+    <string name="tab_year">Year</string>
 </resources>
