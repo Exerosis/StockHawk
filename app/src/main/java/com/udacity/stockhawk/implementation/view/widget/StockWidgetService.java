@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
+import com.orhanobut.hawk.Hawk;
 import com.robinhood.spark.SparkAdapter;
 import com.robinhood.spark.SparkView;
 import com.udacity.stockhawk.R;
@@ -63,6 +64,8 @@ public class StockWidgetService extends RemoteViewsService {
 
             @Override
             public void onDataSetChanged() {
+                if (!Hawk.isBuilt())
+                    Hawk.init(StockWidgetService.this);
                 stocks = Store.getStocks();
             }
 
