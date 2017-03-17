@@ -43,7 +43,6 @@
                 android:id="@+id/stock_details_symbol"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/stock_details_chart"
                 android:layout_alignParentTop="true"
                 android:textAlignment="center"
                 tools:text="NVDA" />
@@ -53,6 +52,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_above="@+id/stock_details_tabs"
+                android:layout_below="@+id/stock_details_symbol"
                 android:background="?attr/colorBackgroundFloating"
                 app:spark_scrubEnabled="false" />
 

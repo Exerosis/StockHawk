@@ -46,20 +46,19 @@ public class AddStockView implements AddStock {
             return true;
         });
         builder.setMessage(text);
-        builder.setPositiveButton(add, (dialog, id) -> {
-            if (listener != null)
-                listener.onAdd(input.getText().toString());
-        });
+        builder.setPositiveButton(add, null);
         builder.setNegativeButton(cancel, (dialog, id) -> {
             if (listener != null)
                 listener.onCancel();
         });
-        Dialog dialog = builder.create();
-
+        AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(d -> ((AlertDialog) d).getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(button -> {
+            if (listener != null)
+                listener.onAdd(input.getText().toString());
+        }));
         Window window = dialog.getWindow();
         if (window != null)
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-
         return dialog;
     }
 

@@ -36,7 +36,7 @@ public class StockWidgetService extends RemoteViewsService {
         Log.i("TEST", "onGetViewFactory");
 
         chart = (SparkView) LayoutInflater.from(this).inflate(R.layout.spark_chart_layout, null);
-        chart.setCornerRadius(80);
+//        chart.setLineWidth(5.6F);
         chart.setAdapter(new SparkAdapter() {
             @Override
             public int getCount() {
@@ -50,8 +50,6 @@ public class StockWidgetService extends RemoteViewsService {
 
             @Override
             public float getY(int index) {
-                if (index == 0)
-                    return history.getQuotes().get(index).getOpen();
                 return history.getQuotes().get(index).getAdjustedClose();
             }
         });
@@ -95,12 +93,14 @@ public class StockWidgetService extends RemoteViewsService {
                 view.setOnClickFillInIntent(R.id.stock_holder_layout, new Intent().putExtra(ARGS_STOCK, stock));
 
                 history = stock.getHistory(Period.MONTH);
+                chart.setLineColor(ContextCompat.getColor(StockWidgetService.this, history.getColor()));
                 chart.getAdapter().notifyDataSetChanged();
 
                 int width = (int) applyDimension(COMPLEX_UNIT_DIP, getResources().getDimension(R.dimen.chart_width), getResources().getDisplayMetrics());
                 int height = (int) applyDimension(COMPLEX_UNIT_DIP, 48, getResources().getDisplayMetrics());
                 chart.layout(0, 0, width, height);
-                view.setImageViewBitmap(R.id.stock_holder_chart, getViewBitmap(chart));
+
+                view.setImageViewBitmap(R.id.stock_holder_image, getViewBitmap(chart));
                 return view;
             }
 
