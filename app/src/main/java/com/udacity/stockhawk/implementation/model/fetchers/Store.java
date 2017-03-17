@@ -11,23 +11,25 @@ import java.util.concurrent.TimeUnit;
 
 import rx.Observable;
 import rx.Subscription;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
+import static com.udacity.stockhawk.utilities.Transformers.COMPUTE_THREAD;
 import static com.udacity.stockhawk.utilities.Transformers.IO_THREAD;
+import static com.udacity.stockhawk.utilities.Transformers.MAIN_THREAD;
 
 public class Store {
     private static final String KEY_STOCKS = "STOCKS";
     private static final String KEY_DISPLAY_MODE = "DISPLAY_MODE";
     private static final PublishSubject<Long> SAVE_HOOK = PublishSubject.create();
     private static final PublishSubject<Long> REFRESH_HOOK = PublishSubject.create();
-    private static final Observable<Long> SAVE_OBSERVABLE = Observable.interval(2, TimeUnit.MINUTES).mergeWith(SAVE_HOOK).compose(IO_THREAD());
+    private static final Observable<Long> SAVE_OBSERVABLE = Observable.interval(2, TimeUnit.MINUTES).mergeWith(SAVE_HOOK).compose(COMPUTE_THREAD());
     private static final Observable<Long> REFRESH_OBSERVABLE = Observable.interval(30, TimeUnit.MINUTES).mergeWith(REFRESH_HOOK).compose(IO_THREAD());
 
     private static List<StockModel> stocks;
     private static Subscription saveSubscription;
     private static Subscription refreshSubscription;
+
 
     public static boolean getDisplayMode() {
         return Hawk.get(KEY_DISPLAY_MODE, true);
@@ -48,6 +50,8 @@ public class Store {
                 stocks.add(StockModel.CREATOR.createFromModel(Model.obtain(json)));
         if (!stocks.isEmpty())
             subscribe();
+        else
+            unsubscribe();
         refresh();
         return stocks;
     }
@@ -60,10 +64,15 @@ public class Store {
             StockModel stock = StockModel.newInstance(symbol);
             stocks.add(stock);
             subscribe();
-            refresh();
-            save();
+            Schedulers.io().createWorker().schedule(() -> {
+                try {
+                    stock.refresh();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
             return stocks.indexOf(stock);
-        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
+        }).compose(MAIN_THREAD());
     }
 
     public static int removeStock(StockModel stock) {
@@ -71,7 +80,6 @@ public class Store {
         stocks.remove(stock);
         if (stocks.isEmpty())
             unsubscribe();
-        save();
         return index;
     }
 
@@ -96,8 +104,14 @@ public class Store {
             if (stocks.isEmpty())
                 return;
             List<String> models = new ArrayList<>();
-            for (StockModel stock : stocks)
+            for (StockModel stock : stocks) {
+                try {
+                    stock.refresh();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 models.add(Model.obtain(stock).toString());
+            }
             Hawk.put(KEY_STOCKS, models);
         });
     }

@@ -107,6 +107,7 @@ public class StockListFragment extends Fragment implements StockListController {
                 view.hideNetworkError();
                 view.hideStockError();
                 dialog.dismissAllowingStateLoss();
+                Store.save();
             }, throwable -> {
                 if (throwable instanceof IllegalArgumentException)
                     dialog.showError(dialog_duplicate_stock);

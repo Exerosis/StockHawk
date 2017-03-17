@@ -12,4 +12,8 @@ public class Transformers {
     public static <T> Observable.Transformer<T, T> IO_THREAD() {
         return observable -> observable.subscribeOn(Schedulers.io()).unsubscribeOn(Schedulers.io()).observeOn(Schedulers.io());
     }
+
+    public static <T> Observable.Transformer<T, T> COMPUTE_THREAD() {
+        return observable -> observable.subscribeOn(Schedulers.computation()).unsubscribeOn(Schedulers.computation()).observeOn(Schedulers.computation());
+    }
 }

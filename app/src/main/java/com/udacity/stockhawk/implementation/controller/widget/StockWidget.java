@@ -24,8 +24,8 @@ public class StockWidget extends AppWidgetProvider {
             Intent intent = new Intent(context, StockWidgetService.class);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id);
 
-            views.setPendingIntentTemplate(R.id.stock_widget_list, getActivity(context, 0, new Intent(context, StockDetailsContainerActivity.class), FLAG_UPDATE_CURRENT));
             views.setRemoteAdapter(R.id.stock_widget_list, intent);
+            views.setPendingIntentTemplate(R.id.stock_widget_list, getActivity(context, 0, new Intent(context, StockDetailsContainerActivity.class), FLAG_UPDATE_CURRENT));
             manager.updateAppWidget(id, views);
         }
     }

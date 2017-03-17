@@ -8,6 +8,7 @@ import com.udacity.stockhawk.utilities.Model;
 import com.udacity.stockhawk.utilities.Modelable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.udacity.stockhawk.R.color.green_primary;
@@ -24,7 +25,7 @@ public class HistoryModel implements Modelable {
     }
 
     public HistoryModel(@NonNull List<QuoteModel> quotes) {
-        this.quotes = quotes;
+        this.quotes = Collections.synchronizedList(quotes);
         refresh();
     }
 
@@ -92,7 +93,7 @@ public class HistoryModel implements Modelable {
         color = in.readInt();
         darkColor = in.readInt();
         accentColor = in.readInt();
-        quotes = in.readList(QuoteModel.CREATOR);
+        quotes = Collections.synchronizedList(in.readList(QuoteModel.CREATOR));
     }
 
     public static final Modelable.Creator<HistoryModel> CREATOR = new Modelable.Creator<HistoryModel>() {
