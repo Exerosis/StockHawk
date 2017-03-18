@@ -12,7 +12,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.orhanobut.hawk.Hawk;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.addstock.AddStockDialog;
 import com.udacity.stockhawk.implementation.controller.details.container.StockDetailsContainerActivity;
@@ -46,10 +45,9 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog = new AddStockDialog();
         dialog.setListener(this);
 
-        Hawk.init(getContext()).build();
         setHasOptionsMenu(true);
 
-        stocks = Store.getStocks();
+        stocks = Store.getStocks(getContext());
         if (stocks.isEmpty())
             view.showStockError();
 
@@ -90,7 +88,7 @@ public class StockListFragment extends Fragment implements StockListController {
 
     @Override
     public void onRemove(StockModel stock) {
-        view.getAdapter().notifyItemRemoved(Store.removeStock(stock));
+        view.getAdapter().notifyItemRemoved(Store.removeStock(getContext(), stock));
         if (stocks.isEmpty())
             view.showStockError();
     }
@@ -102,12 +100,11 @@ public class StockListFragment extends Fragment implements StockListController {
         else if (symbol == null || symbol.isEmpty())
             dialog.showError(dialog_error_blank);
         else
-            Store.addStock(symbol).subscribe(index -> {
+            Store.addStock(getContext(), symbol).subscribe(index -> {
                 view.getAdapter().notifyItemInserted(index);
                 view.hideNetworkError();
                 view.hideStockError();
                 dialog.dismissAllowingStateLoss();
-                Store.save();
             }, throwable -> {
                 if (throwable instanceof IllegalArgumentException)
                     dialog.showError(dialog_duplicate_stock);
@@ -137,15 +134,21 @@ public class StockListFragment extends Fragment implements StockListController {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.main_stock_list, menu);
         MenuItem item = menu.findItem(R.id.action_change_units);
-        item.setIcon(Store.getDisplayMode() ? R.drawable.ic_percentage : R.drawable.ic_dollar);
+        item.setIcon(Store.getDisplayMode(getContext()) ? R.drawable.ic_percentage : R.drawable.ic_dollar);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() != R.id.action_change_units)
             return super.onOptionsItemSelected(item);
-        item.setIcon(Store.toggleDisplayMode() ? R.drawable.ic_percentage : R.drawable.ic_dollar);
+        item.setIcon(Store.toggleDisplayMode(getContext()) ? R.drawable.ic_percentage : R.drawable.ic_dollar);
         onRefresh();
         return true;
+    }
+
+    @Override
+    public void onStop() {
+        Store.save(getContext());
+        super.onStop();
     }
 }

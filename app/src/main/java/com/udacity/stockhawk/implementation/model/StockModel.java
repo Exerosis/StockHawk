@@ -38,6 +38,10 @@ public class StockModel implements Modelable {
         this.historiesSubject = BehaviorSubject.create(histories);
     }
 
+    public String getSymbol() {
+        return getQuote().getSymbol();
+    }
+
     public QuoteModel getQuote() {
         return quoteSubject.getValue();
     }
@@ -105,7 +109,7 @@ public class StockModel implements Modelable {
         @Override
         public StockModel createFromModel(Model in) {
             QuoteModel quote = in.readModelable(QuoteModel.CREATOR);
-            for (StockModel stock : Store.getStocks())
+            for (StockModel stock : Store.getStocksUnsafe())
                 if (stock.getQuote().equals(quote))
                     return stock;
             return new StockModel(quote, in.readMap(Period.class, HistoryModel.CREATOR));
@@ -116,7 +120,7 @@ public class StockModel implements Modelable {
             QuoteModel quote = in.readParcelable(QuoteModel.class.getClassLoader());
             if (quote == null)
                 throw new IllegalStateException("Quote cannot be null!");
-            for (StockModel stock : Store.getStocks())
+            for (StockModel stock : Store.getStocksUnsafe())
                 if (stock.getQuote().equals(quote))
                     return stock;
 

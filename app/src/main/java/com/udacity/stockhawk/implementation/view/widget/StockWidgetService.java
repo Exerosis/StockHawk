@@ -3,6 +3,7 @@ package com.udacity.stockhawk.implementation.view.widget;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,8 +19,7 @@ import com.udacity.stockhawk.implementation.model.HistoryModel;
 import com.udacity.stockhawk.implementation.model.QuoteModel;
 import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.implementation.model.fetchers.Store;
-
-import java.util.List;
+import com.udacity.stockhawk.utilities.ObservableList;
 
 import static android.util.TypedValue.COMPLEX_UNIT_DIP;
 import static android.util.TypedValue.applyDimension;
@@ -27,52 +27,46 @@ import static android.view.View.VISIBLE;
 import static com.udacity.stockhawk.implementation.controller.details.StockDetailsFragment.ARGS_STOCK;
 
 public class StockWidgetService extends RemoteViewsService {
-    private HistoryModel history;
-    private List<StockModel> stocks;
-    private SparkView chart;
-
     @Override
     public RemoteViewsFactory onGetViewFactory(Intent intent) {
         Log.i("TEST", "onGetViewFactory");
 
-        chart = (SparkView) LayoutInflater.from(this).inflate(R.layout.spark_chart_layout, null);
-
-        chart.setAdapter(new SparkAdapter() {
-            @Override
-            public int getCount() {
-                return history == null ? 0 : history.getQuotes().size();
-            }
-
-            @Override
-            public Object getItem(int index) {
-                return history.getQuotes().get(index);
-            }
-
-            @Override
-            public float getY(int index) {
-                return history.getQuotes().get(index).getAdjustedClose();
-            }
-        });
-
-
         return new RemoteViewsFactory() {
+            private ObservableList<StockModel> stocks;
+            private HistoryModel history;
+            private SparkView chart;
+
             @Override
             public void onCreate() {
-                onDataSetChanged();
+                stocks = Store.getStocks(getApplicationContext());
+                chart = (SparkView) LayoutInflater.from(getApplicationContext()).inflate(R.layout.spark_chart_layout, null);
+                chart.setAdapter(new SparkAdapter() {
+                    @Override
+                    public int getCount() {
+                        return history == null ? 0 : history.getQuotes().size();
+                    }
+
+                    @Override
+                    public Object getItem(int index) {
+                        return history.getQuotes().get(index);
+                    }
+
+                    @Override
+                    public float getY(int index) {
+                        return history.getQuotes().get(index).getAdjustedClose();
+                    }
+                });
             }
 
             @Override
             public void onDestroy() {
                 stocks = null;
-                history = null;
-                chart = null;
             }
 
             @Override
             public void onDataSetChanged() {
-                stocks = Store.getStocks();
-            }
 
+            }
 
             @Override
             public int getCount() {
@@ -81,7 +75,7 @@ public class StockWidgetService extends RemoteViewsService {
 
             @Override
             public RemoteViews getViewAt(int index) {
-                RemoteViews view = new RemoteViews(StockWidgetService.this.getPackageName(), R.layout.stock_view_holder);
+                RemoteViews view = new RemoteViews(getApplicationContext().getPackageName(), R.layout.stock_view_holder);
                 StockModel stock = stocks.get(index);
                 QuoteModel quote = stock.getQuote();
 
@@ -93,15 +87,17 @@ public class StockWidgetService extends RemoteViewsService {
 
                 view.setOnClickFillInIntent(R.id.stock_holder_layout, new Intent().putExtra(ARGS_STOCK, stock));
 
-                history = stock.getHistory(Period.MONTH);
-                chart.setLineColor(ContextCompat.getColor(StockWidgetService.this, history.getColor()));
-                chart.getAdapter().notifyDataSetChanged();
+                synchronized (this) {
+                    history = stock.getHistory(Period.MONTH);
+                    chart.getAdapter().notifyDataSetChanged();
+                    chart.setLineColor(ContextCompat.getColor(StockWidgetService.this, history.getColor()));
 
-                int width = (int) applyDimension(COMPLEX_UNIT_DIP, getResources().getDimension(R.dimen.chart_width), getResources().getDisplayMetrics());
-                int height = (int) applyDimension(COMPLEX_UNIT_DIP, 48, getResources().getDisplayMetrics());
-                chart.layout(0, 0, width, height);
+                    int width = (int) applyDimension(COMPLEX_UNIT_DIP, getResources().getDimension(R.dimen.chart_width), getResources().getDisplayMetrics());
+                    int height = (int) applyDimension(COMPLEX_UNIT_DIP, 48, getResources().getDisplayMetrics());
+                    chart.layout(0, 0, width, height);
 
-                view.setImageViewBitmap(R.id.stock_holder_image, getViewBitmap(chart));
+                    view.setImageViewBitmap(R.id.stock_holder_image, getViewBitmap(chart));
+                }
                 return view;
             }
 
@@ -138,6 +134,21 @@ public class StockWidgetService extends RemoteViewsService {
         view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
 
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+
+        int pixel = bitmap.getPixel(0, 0);
+        if (pixel == Color.TRANSPARENT)
+            System.out.println("Transp");
+
+
+        int thickness = 3;
+        for (int x = 0; x < bitmap.getWidth(); x++)
+            for (int y = 0; y < bitmap.getHeight(); y++) {
+                int color = bitmap.getPixel(x, y);
+                if (color != Color.TRANSPARENT)
+                    for (int i = 0; i < thickness; i++)
+                        if (y + i < bitmap.getHeight())
+                            bitmap.setPixel(x, y + i, color);
+            }
         Canvas canvas = new Canvas(bitmap);
         view.draw(canvas);
         return bitmap;
