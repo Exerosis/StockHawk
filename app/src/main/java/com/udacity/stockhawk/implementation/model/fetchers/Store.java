@@ -1,11 +1,15 @@
 package com.udacity.stockhawk.implementation.model.fetchers;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 
+import com.udacity.stockhawk.R;
+import com.udacity.stockhawk.implementation.controller.widget.StockWidget;
 import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.utilities.Model;
-import com.udacity.stockhawk.utilities.ObservableList;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,8 +33,8 @@ public class Store {
     private static final PublishSubject<Long> REFRESH_HOOK = PublishSubject.create();
     private static final Observable<Long> REFRESH_OBSERVABLE = Observable.interval(30, TimeUnit.MINUTES).mergeWith(REFRESH_HOOK).compose(IO_THREAD());
 
-    private static ObservableList<StockModel> stocks;
-    private static Subscription refreshSubscription;
+    private static List<StockModel> stocks;
+    private static Subscription subscription;
 
     public static boolean getDisplayMode(Context context) {
         return context.getSharedPreferences(PREFS_DISPLAY_MODE, MODE_PRIVATE).getBoolean(KEY_DISPLAY_MODE, true);
@@ -44,10 +48,10 @@ public class Store {
     }
 
     @SuppressWarnings("unchecked")
-    public static ObservableList<StockModel> getStocks(Context context) {
+    public static List<StockModel> getStocks(Context context) {
         if (stocks != null)
             return stocks;
-        stocks = ObservableList.create(Collections.synchronizedList(new ArrayList<>()));
+        stocks = Collections.synchronizedList(new ArrayList<>());
         SharedPreferences preferences = context.getSharedPreferences(PREFS_DISPLAY_MODE, MODE_PRIVATE);
         for (String json : (Collection<String>) preferences.getAll().values())
             stocks.add(StockModel.CREATOR.createFromModel(Model.obtain(json)));
@@ -72,6 +76,13 @@ public class Store {
             getStocks(context).add(stock);
             subscribe();
             Schedulers.io().createWorker().schedule(() -> {
+                Intent intent = new Intent(context, StockWidget.class);
+                intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+                AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
+                int[] ids = widgetManager.getAppWidgetIds(new ComponentName(context, StockWidget.class));
+                widgetManager.notifyAppWidgetViewDataChanged(ids, R.id.stock_widget_list);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+                context.sendBroadcast(intent);
                 try {
                     stock.refresh();
                     SharedPreferences.Editor editor = context.getSharedPreferences(PREFS_DISPLAY_MODE, MODE_PRIVATE).edit();
@@ -118,7 +129,7 @@ public class Store {
     }
 
     private static void subscribe() {
-        refreshSubscription = REFRESH_OBSERVABLE.subscribe(tick -> {
+        subscription = REFRESH_OBSERVABLE.subscribe(tick -> {
             for (StockModel stock : stocks)
                 try {
                     stock.refresh();
@@ -129,6 +140,7 @@ public class Store {
     }
 
     private static void unsubscribe() {
-        refreshSubscription.unsubscribe();
+        if (subscription != null)
+            subscription.unsubscribe();
     }
 }

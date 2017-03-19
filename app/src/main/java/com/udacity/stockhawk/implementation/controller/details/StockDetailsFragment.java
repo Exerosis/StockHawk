@@ -15,9 +15,13 @@ import com.udacity.stockhawk.implementation.view.details.StockDetails;
 import com.udacity.stockhawk.implementation.view.details.StockDetailsView;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import rx.Subscription;
+
+import static com.udacity.stockhawk.implementation.model.QuoteModel.FORMAT_ABSOLUTE_CHANGE;
+import static com.udacity.stockhawk.implementation.model.QuoteModel.FORMAT_PERCENT_CHANGE;
 
 public class StockDetailsFragment extends Fragment implements StockDetailsController {
     public static final String ARGS_STOCK = "STOCK";
@@ -60,6 +64,11 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
             }
         });
 
+        view.setOnScrubListener(value -> {
+            List<QuoteModel> quotes = histories.get(period).getQuotes();
+            refreshQuote(value == null ? quotes.get(quotes.size() - 1) : (QuoteModel) value);
+        });
+
         view.loadState(in);
 
         StockModel stock = getArguments().getParcelable(ARGS_STOCK);
@@ -91,6 +100,18 @@ public class StockDetailsFragment extends Fragment implements StockDetailsContro
 
     private void refresh() {
         view.getAdapter().notifyDataSetChanged();
-        view.setColor(histories.get(period).getColor(), histories.get(period).getDarkColor());
+        HistoryModel history = histories.get(period);
+        if (history == null)
+            return;
+        view.setColor(history.getColor(), history.getDarkColor());
+        refreshQuote(history.getQuotes().get(history.getQuotes().size() - 1));
+    }
+
+    public void refreshQuote(QuoteModel quote) {
+        QuoteModel first = histories.get(period).getQuotes().get(0);
+        float change = quote.getAdjustedClose() - first.getAdjustedClose();
+        view.setQuote(quote);
+        view.setAbsoluteChange(FORMAT_ABSOLUTE_CHANGE.format(change));
+        view.setPercentChange(FORMAT_PERCENT_CHANGE.format((change / first.getAdjustedClose())));
     }
 }

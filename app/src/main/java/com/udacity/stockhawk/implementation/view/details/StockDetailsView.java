@@ -11,11 +11,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.robinhood.spark.SparkAdapter;
 import com.robinhood.spark.SparkView;
 import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.implementation.controller.details.Period;
+import com.udacity.stockhawk.implementation.model.QuoteModel;
 
 import butterknife.BindColor;
 import butterknife.BindView;
@@ -36,6 +38,17 @@ public class StockDetailsView implements StockDetails {
     protected Toolbar toolbar;
     @BindView(R.id.stock_details_background)
     protected View background;
+    @BindView(R.id.stock_details_symbol)
+    protected TextView symbol;
+    @BindView(R.id.stock_details_absolute_change)
+    protected TextView absoluteChange;
+    @BindView(R.id.stock_details_percent_change)
+    protected TextView percentChange;
+    @BindView(R.id.stock_details_price)
+    protected TextView price;
+    @BindView(R.id.stock_details_date)
+    protected TextView date;
+
     @BindColor(R.color.grey_primary)
     protected int color;
     @BindColor(R.color.grey_primary_dark)
@@ -51,6 +64,9 @@ public class StockDetailsView implements StockDetails {
         activity.setSupportActionBar(toolbar);
 
         chart.setCornerRadius(40);
+
+
+        chart.setScrubEnabled(true);
 
         tabs.getTabAt(1).select();
 
@@ -73,7 +89,6 @@ public class StockDetailsView implements StockDetails {
         });
     }
 
-
     @Override
     public void setColor(@ColorRes int colorID, @ColorRes int darkColorID) {
         int color = ContextCompat.getColor(view.getContext(), colorID);
@@ -87,9 +102,12 @@ public class StockDetailsView implements StockDetails {
         colorAnimator.addUpdateListener(animation -> {
             this.color = (int) animation.getAnimatedValue();
 
+            absoluteChange.setTextColor(this.color);
+            percentChange.setTextColor(this.color);
             chart.setLineColor(this.color);
             background.setBackgroundColor(this.color);
             toolbar.setBackgroundColor(this.color);
+            tabs.setSelectedTabIndicatorColor(this.color);
         });
         colorAnimator.start();
 
@@ -98,9 +116,32 @@ public class StockDetailsView implements StockDetails {
             this.darkColor = (int) animation.getAnimatedValue();
 
             activity.getWindow().setStatusBarColor(this.darkColor);
-            tabs.setSelectedTabIndicatorColor(this.darkColor);
         });
         darkColorAnimator.start();
+    }
+
+    @Override
+    public void setOnScrubListener(SparkView.OnScrubListener listener) {
+        chart.setScrubListener(listener);
+    }
+
+    @Override
+    public void setAbsoluteChange(String absoluteChange) {
+        this.absoluteChange.setText('(' + absoluteChange + ')');
+    }
+
+    @Override
+    public void setPercentChange(String percentChange) {
+        this.percentChange.setText(percentChange);
+    }
+
+    @Override
+    public void setQuote(QuoteModel quote) {
+        symbol.setText(quote.getSymbol());
+        price.setText(quote.getPrice());
+        date.setText(quote.getDate());
+        setPercentChange(quote.getPercentChange());
+        setAbsoluteChange(quote.getAbsoluteChange());
     }
 
 

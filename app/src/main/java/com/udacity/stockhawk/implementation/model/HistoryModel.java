@@ -11,9 +11,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.udacity.stockhawk.R.color.green_accent;
 import static com.udacity.stockhawk.R.color.green_primary;
+import static com.udacity.stockhawk.R.color.green_primary_dark;
+import static com.udacity.stockhawk.R.color.grey_accent;
 import static com.udacity.stockhawk.R.color.grey_primary;
+import static com.udacity.stockhawk.R.color.grey_primary_dark;
+import static com.udacity.stockhawk.R.color.red_accent;
 import static com.udacity.stockhawk.R.color.red_primary;
+import static com.udacity.stockhawk.R.color.red_primary_dark;
 
 public class HistoryModel implements Modelable {
     @ColorRes
@@ -30,14 +36,14 @@ public class HistoryModel implements Modelable {
     }
 
     public void refresh() {
-        float last = 0, first = 0;
+        float first = 0, last = 0;
         if (quotes.size() > 1) {
-            last = quotes.get(0).getOpen();
-            first = quotes.get(quotes.size() - 1).getAdjustedClose();
+            first = quotes.get(0).getAdjustedClose();
+            last = quotes.get(quotes.size() - 1).getAdjustedClose();
         }
-        color = last > first ? red_primary : last < first ? green_primary : grey_primary;
-        darkColor = last > first ? red_primary : last < first ? green_primary : grey_primary;
-        accentColor = last > first ? red_primary : last < first ? green_primary : grey_primary;
+        color = first > last ? red_primary : first < last ? green_primary : grey_primary;
+        darkColor = first > last ? red_primary_dark : first < last ? green_primary_dark : grey_primary_dark;
+        accentColor = first > last ? red_accent : first < last ? green_accent : grey_accent;
     }
 
     public List<QuoteModel> getQuotes() {

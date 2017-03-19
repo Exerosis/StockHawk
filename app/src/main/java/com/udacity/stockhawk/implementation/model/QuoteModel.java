@@ -1,5 +1,6 @@
 package com.udacity.stockhawk.implementation.model;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.support.annotation.ColorRes;
 
@@ -7,9 +8,10 @@ import com.udacity.stockhawk.implementation.model.fetchers.Store;
 import com.udacity.stockhawk.utilities.Model;
 import com.udacity.stockhawk.utilities.Modelable;
 
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Calendar;
+import java.text.SimpleDateFormat;
 import java.util.Locale;
 
 import yahoofinance.histquotes.HistoricalQuote;
@@ -25,11 +27,13 @@ import static com.udacity.stockhawk.R.color.red_primary;
 import static com.udacity.stockhawk.R.color.red_primary_dark;
 
 public class QuoteModel implements Modelable {
-    private static final DecimalFormat FORMAT_ABSOLUTE_CHANGE;
-    private static final DecimalFormat FORMAT_PERCENT_CHANGE;
-    private static final DecimalFormat FORMAT_PRICE;
+    public static final DecimalFormat FORMAT_ABSOLUTE_CHANGE;
+    public static final DecimalFormat FORMAT_PERCENT_CHANGE;
+    public static final DecimalFormat FORMAT_PRICE;
+    public static final DateFormat FORMAT_DATE;
 
     static {
+        FORMAT_DATE = new SimpleDateFormat("MMM dd, yyyy", Locale.US);
         FORMAT_ABSOLUTE_CHANGE = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.US);
         FORMAT_ABSOLUTE_CHANGE.setPositivePrefix("+$");
         FORMAT_PERCENT_CHANGE = (DecimalFormat) NumberFormat.getPercentInstance(Locale.getDefault());
@@ -46,7 +50,7 @@ public class QuoteModel implements Modelable {
     private float high;
     private float close;
     private float adjustedClose;
-    private Calendar date;
+    private String date;
     private long volume;
     private String percentChange;
     private String absoluteChange;
@@ -69,20 +73,20 @@ public class QuoteModel implements Modelable {
         high = quote.getDayHigh().floatValue();
         close = quote.getPrice().floatValue();
         adjustedClose = close;
-        date = quote.getLastTradeTime();
+        date = FORMAT_DATE.format(quote.getLastTradeTime().getTime());
         volume = quote.getVolume();
     }
 
     public QuoteModel(HistoricalQuote quote) {
         this(quote.getAdjClose().floatValue() - quote.getOpen().floatValue());
-        percentChange = FORMAT_PERCENT_CHANGE.format(100);
+        percentChange = FORMAT_PERCENT_CHANGE.format(1);
         symbol = quote.getSymbol();
         open = quote.getOpen().floatValue();
         low = quote.getLow().floatValue();
         high = quote.getHigh().floatValue();
         close = quote.getClose().floatValue();
         adjustedClose = quote.getAdjClose().floatValue();
-        date = quote.getDate();
+        date = FORMAT_DATE.format(quote.getDate().getTime());
         volume = quote.getVolume();
     }
 
@@ -97,8 +101,8 @@ public class QuoteModel implements Modelable {
         return FORMAT_PRICE.format(getAdjustedClose());
     }
 
-    public String getChange() {
-        return Store.getDisplayMode() ? percentChange : absoluteChange;
+    public String getChange(Context context) {
+        return Store.getDisplayMode(context) ? percentChange : absoluteChange;
     }
 
     public String getAbsoluteChange() {
@@ -133,7 +137,7 @@ public class QuoteModel implements Modelable {
         return adjustedClose;
     }
 
-    public Calendar getDate() {
+    public String getDate() {
         return date;
     }
 
@@ -173,7 +177,7 @@ public class QuoteModel implements Modelable {
         out.writeFloat(low);
         out.writeFloat(close);
         out.writeFloat(adjustedClose);
-        out.writeObject(date);
+        out.writeString(date);
         out.writeLong(volume);
         out.writeString(percentChange);
         out.writeString(absoluteChange);
@@ -192,7 +196,7 @@ public class QuoteModel implements Modelable {
         out.writeFloat(low);
         out.writeFloat(close);
         out.writeFloat(adjustedClose);
-        out.writeSerializable(date);
+        out.writeString(date);
         out.writeLong(volume);
         out.writeString(percentChange);
         out.writeString(absoluteChange);
@@ -210,7 +214,7 @@ public class QuoteModel implements Modelable {
         low = in.readFloat();
         close = in.readFloat();
         adjustedClose = in.readFloat();
-        date = (Calendar) in.readSerializable();
+        date = in.readString();
         volume = in.readLong();
         percentChange = in.readString();
         absoluteChange = in.readString();
@@ -228,7 +232,7 @@ public class QuoteModel implements Modelable {
         low = in.readFloat();
         close = in.readFloat();
         adjustedClose = in.readFloat();
-        date = in.readObject(Calendar.class);
+        date = in.readString();
         volume = in.readLong();
         percentChange = in.readString();
         absoluteChange = in.readString();

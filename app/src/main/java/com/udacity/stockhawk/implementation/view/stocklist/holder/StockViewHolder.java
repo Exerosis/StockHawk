@@ -40,7 +40,7 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
     public StockViewHolder(ViewGroup container) {
         super(LayoutInflater.from(container.getContext()).inflate(R.layout.stock_view_holder, container, false));
         ButterKnife.bind(this, getRoot());
-        
+
         stub.setLayoutResource(R.layout.spark_chart_layout);
         chart = (SparkView) stub.inflate();
 
@@ -79,7 +79,7 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
         quoteSubscription = stock.getQuoteSubject().subscribe(quote -> {
             symbol.setText(quote.getSymbol());
             price.setText(quote.getPrice());
-            change.setText(quote.getChange());
+            change.setText(quote.getChange(getRoot().getContext()));
             change.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), quote.getColor()));
         });
         historySubscription = stock.getHistorySubject(Period.MONTH).subscribe(history -> {

@@ -75,8 +75,8 @@ public class StockModel implements Modelable {
             List<QuoteModel> quotes = histories.get(period).getQuotes();
             if (quotes.isEmpty())
                 quotes.addAll(Network.getHistory(quote, period));
-//            else
-//                quotes.set(0, quote);
+            else
+                quotes.set(quotes.size() - 1, quote);
             histories.get(period).refresh();
         }
         historiesSubject.onNext(histories);
@@ -109,9 +109,11 @@ public class StockModel implements Modelable {
         @Override
         public StockModel createFromModel(Model in) {
             QuoteModel quote = in.readModelable(QuoteModel.CREATOR);
-            for (StockModel stock : Store.getStocksUnsafe())
-                if (stock.getQuote().equals(quote))
-                    return stock;
+            List<StockModel> stocks = Store.getStocksUnsafe();
+            if (stocks != null)
+                for (StockModel stock : stocks)
+                    if (stock.getQuote().equals(quote))
+                        return stock;
             return new StockModel(quote, in.readMap(Period.class, HistoryModel.CREATOR));
         }
 
@@ -120,9 +122,11 @@ public class StockModel implements Modelable {
             QuoteModel quote = in.readParcelable(QuoteModel.class.getClassLoader());
             if (quote == null)
                 throw new IllegalStateException("Quote cannot be null!");
-            for (StockModel stock : Store.getStocksUnsafe())
-                if (stock.getQuote().equals(quote))
-                    return stock;
+            List<StockModel> stocks = Store.getStocksUnsafe();
+            if (stocks != null)
+                for (StockModel stock : stocks)
+                    if (stock.getQuote().equals(quote))
+                        return stock;
 
             Map<Period, HistoryModel> history = new HashMap<>();
             int size = in.readInt();

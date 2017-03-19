@@ -16,14 +16,13 @@
         android:paddingEnd="0dp"
         android:paddingStart="8dp"
         android:textAppearance="@android:style/TextAppearance.Material.Large"
+        android:textColor="@color/primary_text"
         tools:text="NVDA" />
 
     <ViewStub
         android:id="@+id/stock_holder_chart"
         android:layout_width="@dimen/chart_width"
         android:layout_height="match_parent"
-        android:layout_marginBottom="8dp"
-        android:layout_marginTop="8dp"
         android:layout="@layout/image_chart_layout" />
 
     <TextView

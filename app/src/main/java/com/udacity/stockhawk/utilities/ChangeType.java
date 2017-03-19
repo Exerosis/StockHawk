@@ -1,5 +1,5 @@
 package com.udacity.stockhawk.utilities;
 
-enum ChangeType {
+public enum ChangeType {
     ADD, REMOVE;
 }

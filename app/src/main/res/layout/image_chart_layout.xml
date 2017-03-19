@@ -3,5 +3,4 @@
     android:id="@+id/stock_holder_image"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:contentDescription="@string/description_stock_chart"
-    android:src="@color/blue_primary" />
+    android:contentDescription="@string/description_stock_chart" />

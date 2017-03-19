@@ -50,9 +50,9 @@ public class Network {
         }
 
         List<QuoteModel> quotes = new ArrayList<>();
-//       quotes.add(quote);
         for (HistoricalQuote historicalQuote : getStock(quote.getSymbol()).getHistory(from, interval))
             quotes.add(new QuoteModel(historicalQuote));
+        quotes.set(0, quote);
         Collections.reverse(quotes);
         return quotes;
     }

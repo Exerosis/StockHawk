@@ -3,11 +3,9 @@ package com.udacity.stockhawk.implementation.view.widget;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -19,7 +17,8 @@ import com.udacity.stockhawk.implementation.model.HistoryModel;
 import com.udacity.stockhawk.implementation.model.QuoteModel;
 import com.udacity.stockhawk.implementation.model.StockModel;
 import com.udacity.stockhawk.implementation.model.fetchers.Store;
-import com.udacity.stockhawk.utilities.ObservableList;
+
+import java.util.List;
 
 import static android.util.TypedValue.COMPLEX_UNIT_DIP;
 import static android.util.TypedValue.applyDimension;
@@ -32,13 +31,17 @@ public class StockWidgetService extends RemoteViewsService {
         Log.i("TEST", "onGetViewFactory");
 
         return new RemoteViewsFactory() {
-            private ObservableList<StockModel> stocks;
+            private List<StockModel> stocks;
             private HistoryModel history;
             private SparkView chart;
+            private float thickness;
+            private int height;
+            private int width;
 
             @Override
             public void onCreate() {
                 stocks = Store.getStocks(getApplicationContext());
+
                 chart = (SparkView) LayoutInflater.from(getApplicationContext()).inflate(R.layout.spark_chart_layout, null);
                 chart.setAdapter(new SparkAdapter() {
                     @Override
@@ -56,16 +59,23 @@ public class StockWidgetService extends RemoteViewsService {
                         return history.getQuotes().get(index).getAdjustedClose();
                     }
                 });
+                width = (int) applyDimension(COMPLEX_UNIT_DIP, getResources().getDimension(R.dimen.chart_width), getResources().getDisplayMetrics());
+                height = (int) applyDimension(COMPLEX_UNIT_DIP, 64, getResources().getDisplayMetrics());
+                thickness = applyDimension(COMPLEX_UNIT_DIP, 5, getResources().getDisplayMetrics());
+
+                chart.setLineWidth(thickness);
+                chart.layout(0, 0, width, height);
             }
 
             @Override
             public void onDestroy() {
                 stocks = null;
+                chart = null;
+                history = null;
             }
 
             @Override
             public void onDataSetChanged() {
-
             }
 
             @Override
@@ -82,7 +92,7 @@ public class StockWidgetService extends RemoteViewsService {
                 view.setViewVisibility(R.id.stock_holder_chart, VISIBLE);
                 view.setTextViewText(R.id.stock_holder_price, String.valueOf(quote.getPrice()));
                 view.setTextViewText(R.id.stock_holder_symbol, quote.getSymbol());
-                view.setTextViewText(R.id.stock_holder_change, quote.getChange());
+                view.setTextViewText(R.id.stock_holder_change, quote.getChange(getApplicationContext()));
                 view.setInt(R.id.stock_holder_change, "setBackgroundColor", ContextCompat.getColor(StockWidgetService.this, quote.getColor()));
 
                 view.setOnClickFillInIntent(R.id.stock_holder_layout, new Intent().putExtra(ARGS_STOCK, stock));
@@ -91,12 +101,10 @@ public class StockWidgetService extends RemoteViewsService {
                     history = stock.getHistory(Period.MONTH);
                     chart.getAdapter().notifyDataSetChanged();
                     chart.setLineColor(ContextCompat.getColor(StockWidgetService.this, history.getColor()));
-
-                    int width = (int) applyDimension(COMPLEX_UNIT_DIP, getResources().getDimension(R.dimen.chart_width), getResources().getDisplayMetrics());
-                    int height = (int) applyDimension(COMPLEX_UNIT_DIP, 48, getResources().getDisplayMetrics());
-                    chart.layout(0, 0, width, height);
-
-                    view.setImageViewBitmap(R.id.stock_holder_image, getViewBitmap(chart));
+                    Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bitmap);
+                    chart.draw(canvas);
+                    view.setImageViewBitmap(R.id.stock_holder_image, bitmap);
                 }
                 return view;
             }
@@ -121,36 +129,5 @@ public class StockWidgetService extends RemoteViewsService {
                 return true;
             }
         };
-    }
-
-    public static Bitmap getViewBitmap(View view) {
-        int width = view.getWidth();
-        int height = view.getHeight();
-
-        int measuredWidth = View.MeasureSpec.makeMeasureSpec(width, View.MeasureSpec.EXACTLY);
-        int measuredHeight = View.MeasureSpec.makeMeasureSpec(height, View.MeasureSpec.EXACTLY);
-
-        view.measure(measuredWidth, measuredHeight);
-        view.layout(0, 0, view.getMeasuredWidth(), view.getMeasuredHeight());
-
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-
-        int pixel = bitmap.getPixel(0, 0);
-        if (pixel == Color.TRANSPARENT)
-            System.out.println("Transp");
-
-
-        int thickness = 3;
-        for (int x = 0; x < bitmap.getWidth(); x++)
-            for (int y = 0; y < bitmap.getHeight(); y++) {
-                int color = bitmap.getPixel(x, y);
-                if (color != Color.TRANSPARENT)
-                    for (int i = 0; i < thickness; i++)
-                        if (y + i < bitmap.getHeight())
-                            bitmap.setPixel(x, y + i, color);
-            }
-        Canvas canvas = new Canvas(bitmap);
-        view.draw(canvas);
-        return bitmap;
     }
 }
