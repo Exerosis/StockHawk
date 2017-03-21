@@ -52,7 +52,7 @@ public class Store {
         if (stocks != null)
             return stocks;
         stocks = Collections.synchronizedList(new ArrayList<>());
-        SharedPreferences preferences = context.getSharedPreferences(PREFS_DISPLAY_MODE, MODE_PRIVATE);
+        SharedPreferences preferences = context.getSharedPreferences(PREFS_STOCKS, MODE_PRIVATE);
         for (String json : (Collection<String>) preferences.getAll().values())
             stocks.add(StockModel.CREATOR.createFromModel(Model.obtain(json)));
         if (!stocks.isEmpty())
@@ -85,7 +85,7 @@ public class Store {
                 context.sendBroadcast(intent);
                 try {
                     stock.refresh();
-                    SharedPreferences.Editor editor = context.getSharedPreferences(PREFS_DISPLAY_MODE, MODE_PRIVATE).edit();
+                    SharedPreferences.Editor editor = context.getSharedPreferences(PREFS_STOCKS, MODE_PRIVATE).edit();
                     editor.putString(stock.getSymbol(), Model.obtain(stock).toString());
                     editor.apply();
                 } catch (Exception e) {

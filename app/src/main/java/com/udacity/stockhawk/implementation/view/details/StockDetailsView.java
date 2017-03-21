@@ -128,13 +128,14 @@ public class StockDetailsView implements StockDetails {
     @Override
     public void setAbsoluteChange(String change) {
         absoluteChange.setText('(' + change + ')');
-        absoluteChange.setContentDescription((change.charAt(0) == '-' ? "Down" + change.substring(2) : "Up" + change.substring(1)) + " Dollars");
+        absoluteChange.setContentDescription((change.charAt(0) == '-' ? "Down " : change.charAt(0) == '+' ? "Up " : "") + change.substring(1));
+
     }
 
     @Override
     public void setPercentChange(String change) {
         percentChange.setText(change);
-        percentChange.setContentDescription("Change, " + change );
+        percentChange.setContentDescription("Change, " + change);
     }
 
     @Override

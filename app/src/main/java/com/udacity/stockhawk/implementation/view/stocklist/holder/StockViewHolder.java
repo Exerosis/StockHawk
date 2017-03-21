@@ -83,8 +83,8 @@ public class StockViewHolder extends RecyclerView.ViewHolder implements StockHol
             price.setContentDescription("Price, " + quote.getPrice());
             String change = quote.getChange(getRoot().getContext());
             this.change.setText(change);
-            this.change.setContentDescription("Change since open, " + change);
             this.change.setBackgroundColor(ContextCompat.getColor(getRoot().getContext(), quote.getColor()));
+            this.change.setContentDescription((quote.getColor() == R.color.grey_primary ? "" : quote.getColor() == R.color.red_primary ? "Down " : "Up ") + change.substring(1));
         });
         historySubscription = stock.getHistorySubject(Period.MONTH).subscribe(history -> {
             this.history = history;
