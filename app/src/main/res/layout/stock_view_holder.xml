@@ -23,6 +23,7 @@
         android:id="@+id/stock_holder_chart"
         android:layout_width="@dimen/chart_width"
         android:layout_height="match_parent"
+        android:importantForAccessibility="no"
         android:layout="@layout/image_chart_layout" />
 
     <TextView

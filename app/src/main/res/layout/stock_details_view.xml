@@ -30,7 +30,8 @@
             android:id="@+id/stock_details_background"
             android:layout_width="match_parent"
             android:layout_height="64dp"
-            android:background="?attr/colorPrimary" />
+            android:background="?attr/colorPrimary"
+            android:importantForAccessibility="no" />
 
         <RelativeLayout
             android:layout_width="match_parent"
@@ -44,6 +45,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentTop="true"
+                android:focusable="true"
                 android:orientation="vertical">
 
                 <TextView
@@ -97,6 +99,7 @@
                 android:layout_height="200dp"
                 android:layout_below="@+id/stock_details_quote"
                 android:background="?attr/colorBackgroundFloating"
+                android:importantForAccessibility="no"
                 app:spark_scrubEnabled="false" />
 
             <android.support.design.widget.TabLayout

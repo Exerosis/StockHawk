@@ -46,7 +46,6 @@ public class StockListFragment extends Fragment implements StockListController {
         dialog.setListener(this);
 
         setHasOptionsMenu(true);
-
         stocks = Store.getStocks(getContext());
         if (stocks.isEmpty())
             view.showStockError();

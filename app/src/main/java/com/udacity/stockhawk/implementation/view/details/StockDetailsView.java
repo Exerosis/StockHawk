@@ -126,20 +126,25 @@ public class StockDetailsView implements StockDetails {
     }
 
     @Override
-    public void setAbsoluteChange(String absoluteChange) {
-        this.absoluteChange.setText('(' + absoluteChange + ')');
+    public void setAbsoluteChange(String change) {
+        absoluteChange.setText('(' + change + ')');
+        absoluteChange.setContentDescription((change.charAt(0) == '-' ? "Down" + change.substring(2) : "Up" + change.substring(1)) + " Dollars");
     }
 
     @Override
-    public void setPercentChange(String percentChange) {
-        this.percentChange.setText(percentChange);
+    public void setPercentChange(String change) {
+        percentChange.setText(change);
+        percentChange.setContentDescription("Change, " + change );
     }
 
     @Override
     public void setQuote(QuoteModel quote) {
         symbol.setText(quote.getSymbol());
+        symbol.setContentDescription("Stock, " + quote.getSymbol().replace("", " ").trim());
         price.setText(quote.getPrice());
+        price.setContentDescription("Price, " + quote.getPrice());
         date.setText(quote.getDate());
+        date.setContentDescription("Date, " + quote.getDate());
         setPercentChange(quote.getPercentChange());
         setAbsoluteChange(quote.getAbsoluteChange());
     }

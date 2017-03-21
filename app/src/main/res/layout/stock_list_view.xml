@@ -54,6 +54,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="8dp"
         android:clickable="true"
+        android:contentDescription="@string/description_add_stock"
         app:srcCompat="@drawable/fab_plus" />
 
 </android.support.design.widget.CoordinatorLayout>
